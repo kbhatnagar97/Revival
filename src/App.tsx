@@ -9,8 +9,27 @@ function App() {
       <div className='counter'>
         <div className='count-text'>{count}</div>
         <div className='counter-buttons'>
-          <div className='counter-button count' onClick={() => {setCount(count + 1)}}>Count</div>
-          <div className='counter-button reset' onClick={() => {setCount(0)}}>Reset</div>
+          <button
+            className='counter-button op-button decrement' 
+            onClick={() => setCount(count - 1)}
+            disabled={count === 0}
+          >
+            -
+          </button>
+
+          <button
+            className='counter-button op-button increment' 
+            onClick={() => setCount(count + 1)}
+          >
+            +
+          </button>
+
+          <button
+            className='counter-button reset'
+            onClick={() => setCount(0)}
+          >
+            Reset
+          </button>
         </div>
       </div>
     </>
