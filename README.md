@@ -1,69 +1,52 @@
-# React + TypeScript + Vite
+# React Revival: A Collection of Practice Projects
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> A repository of small, focused applications built to practice and solidify modern front-end concepts using React and other modern tools.
 
-Currently, two official plugins are available:
+## ✨ Live Demo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Explore the deployed projects here:
 
-## Expanding the ESLint configuration
+**[https://revival-beta.vercel.app/](https://revival-beta.vercel.app/)**
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🚀 Projects Included
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### 1. Interactive Counter
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+![Interactive Counter Demo](src/assets/counter-demo.gif)
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+A simple counter built to practice core React state management and modern CSS for a delightful user experience.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+*   **Concepts Practiced:**
+    *   **React State:** Managing state with the `useState` hook.
+    *   **CSS Animations:** Using `transition` and `transform` for interactive hover and click effects.
+    *   **Responsive Design:** Applying media queries to ensure a great experience on mobile and desktop.
+    *   **Accessibility:** Using semantic HTML and `disabled` states.
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 2. TODO list
+
+*(Coming Soon)*
+
+---
+
+## 🛠️ Local Development
+
+To run these projects on your own machine:
+
+1.  **Clone the repository:**
+    ```sh
+    git clone https://github.com/kbhatnagar97/Revival.git
+    ```
+2.  **Navigate to the directory:**
+    ```sh
+    cd Revival
+    ```
+3.  **Install dependencies:**
+    ```sh
+    npm install
+    ```
+4.  **Start the development server:**
+    ```sh
+    npm start
+    ```
