@@ -1,0 +1,254 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(68, 43, 34, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.25s ease-out;
+  padding: 1rem; // Add padding for small screens to prevent touching edges
+
+  &.is-closing {
+    animation: fadeOut 0.25s ease-in forwards;
+    .modal-content {
+      animation: scaleOut 0.25s ease-in forwards;
+    }
+  }
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+.modal-content {
+  background: #fbfaf8;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: scaleIn 0.25s ease-out;
+  
+  // Set a max-height and overflow to handle the container itself
+  max-height: 90vh;
+  display: flex; // Use flex to manage the form inside
+  flex-direction: column;
+
+  // The form is now the primary layout container inside the modal
+  form {
+    display: flex;
+    flex-direction: column;
+    height: 100%; // Make form take up the full height of the modal content
+    min-height: 0; // Crucial for flex children
+  }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes scaleOut {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.95); opacity: 0; }
+}
+
+.modal-header {
+  text-align: center;
+  border-bottom: 1px solid #eae6e1;
+  padding: 2rem 2rem 1rem 2rem;
+  position: relative;
+  flex-shrink: 0; // Header should not shrink
+
+  h2 {
+    margin: 0;
+    color: #442b22;
+    font-size: 1.5rem;
+  }
+}
+
+.modal-body {
+  // This is the designated scrollable area
+  overflow-y: auto;
+  flex-grow: 1; // It will take up all available space
+  padding: 1rem 2rem;
+  min-height: 0; // Allows the element to shrink, enabling overflow
+}
+
+.close-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: #f5f2ef;
+  border: 1px solid #eae6e1;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #a39189;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: #442b22;
+    transform: scale(1.1) rotate(90deg);
+  }
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+  
+  input {
+    width: 100%;
+    padding: 0.75rem 0.25rem;
+    border: none;
+    border-bottom: 2px solid #eae6e1;
+    border-radius: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background-color: transparent;
+    color: #442b22;
+    transition: border-color 0.2s ease;
+    
+    &:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+  }
+}
+
+.label-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+
+  label {
+    margin-bottom: 0;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #a39189;
+  }
+}
+
+.form-group > label {
+  display: block;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #a39189;
+  margin-bottom: 1rem;
+}
+
+.char-counter {
+  font-size: 0.8rem;
+  color: #a39189;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.picker-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.picker-item {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  &.selected {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px #fbfaf8, 0 0 0 4px #3498db;
+  }
+}
+
+.day-picker {
+  background-color: #f5f2ef;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #a39189;
+
+  &.selected {
+    background-color: #442b22;
+    color: white;
+    border-color: #442b22;
+  }
+}
+
+.icon-picker {
+  background-color: #f5f2ef;
+  font-size: 1.2rem;
+  color: #442b22;
+}
+
+.color-picker {
+  font-size: 1.1rem;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #eae6e1;
+  flex-shrink: 0; // Footer should not shrink
+
+  .btn-delete {
+    margin-right: auto;
+    background: none;
+    border: none;
+    color: #e74c3c;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.75rem 0;
+    &:hover { text-decoration: underline; }
+  }
+  
+  .btn-cancel, .btn-save {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.2s ease;
+  }
+
+  .btn-cancel {
+    background-color: transparent;
+    border-color: #eae6e1;
+    color: #442b22;
+    &:hover { background-color: #f5f2ef; }
+  }
+
+  .btn-save {
+    background-color: #3498db;
+    border-color: #3498db;
+    color: white;
+    &:hover { background-color: #2980b9; transform: translateY(-2px); }
+  }
+}
