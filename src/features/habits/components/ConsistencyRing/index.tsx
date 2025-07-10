@@ -5,25 +5,32 @@ interface ConsistencyRingProps {
   percentage: number;
   color: string;
   lightenedColor: string;
+  size: 'large' | 'small';
 }
 
 const ConsistencyRing: React.FC<ConsistencyRingProps> = ({ percentage, color, lightenedColor }) => {
-  const size = 220;
-  const strokeWidth = 32;
-  const radius = (size - strokeWidth) / 2;
+
+  const { svg: svgSize, stroke: strokeWidth } = { svg: 220, stroke: 32 };
+  const radius = (svgSize - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offsetPercentage = Math.max(percentage, 0.5);
-  const strokeDashoffset = circumference - (offsetPercentage / 100) * circumference;
 
-  const gradientId = `consistencyGradient-${color.replace('#', '')}`;
-  const glowFilterId = `glow-${color.replace('#', '')}`;
+  // THE DEFINITIVE FIX:
+  // 1. Calculate the normal dash offset.
+  const progressOffset = circumference - (offsetPercentage / 100) * circumference;
+  // 2. Add a quarter-turn offset because SVG arcs start at 3 o'clock, not 12.
+  const rotationOffset = circumference / 4;
+  // 3. The final offset correctly positions the start/end of the arc.
+  const strokeDashoffset = progressOffset + rotationOffset;
+
+  const gradientId = `consistencyGradient-${color.replace('#', '')}-${'large'}`;
 
   return (
-    <div className="consistency-ring-container">
+    <div className={`consistency-ring-container consistency-ring-container--${'large'}`}>
       <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
+        width={svgSize}
+        height={svgSize}
+        viewBox={`0 0 ${svgSize} ${svgSize}`}
         className="consistency-ring"
       >
         <defs>
@@ -31,27 +38,17 @@ const ConsistencyRing: React.FC<ConsistencyRingProps> = ({ percentage, color, li
             <stop offset="0%" stopColor={lightenedColor} />
             <stop offset="100%" stopColor={color} />
           </linearGradient>
-          {/* This filter creates the soft glow effect */}
-          <filter id={glowFilterId}>
-            <feGaussianBlur stdDeviation="3.5" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
         </defs>
         
-        {/* Background Circle */}
         <circle
           className="consistency-ring__background"
           stroke="#eae6e1"
           strokeWidth={strokeWidth}
           r={radius}
-          cx={size/2}
-          cy={size/2}
+          cx={svgSize/2}
+          cy={svgSize/2}
         />
 
-        {/* Progress Circle with Gradient and rounded ends */}
         <circle
           className="consistency-ring__progress"
           stroke={`url(#${gradientId})`}
@@ -59,11 +56,10 @@ const ConsistencyRing: React.FC<ConsistencyRingProps> = ({ percentage, color, li
           strokeDasharray={`${circumference} ${circumference}`}
           style={{ strokeDashoffset }}
           r={radius}
-          cx={size/2}
-          cy={size/2}
+          cx={svgSize/2}
+          cy={svgSize/2}
         />
 
-        {/* Text placed inside the SVG for perfect centering */}
         <text
           x="50%"
           y="50%"
