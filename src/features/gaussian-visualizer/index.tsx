@@ -13,8 +13,7 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import annotationPlugin from 'chartjs-plugin-annotation';
-import { vega } from '../../common/deps';
-
+import * as vega from 'vega-statistics'; 
 import Tooltip from '../../common/components/Tooltip';
 
 import { 

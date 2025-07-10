@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { Outlet, useLocation, NavLink } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../Sidebar/Sidebar';
 import GalaxyToggleButton from '../GalaxyToggleButton/GalaxyToggleButton';
 import { FaBars, FaTimes } from 'react-icons/fa';

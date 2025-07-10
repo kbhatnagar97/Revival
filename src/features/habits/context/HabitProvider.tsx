@@ -1,4 +1,4 @@
-import React, { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { HabitContext, type Habit, type HabitContextType } from './habit-context';
 
 const HABIT_STORAGE_KEY = 'app-habit-tracker-data';
