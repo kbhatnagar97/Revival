@@ -5,7 +5,6 @@ interface ConsistencyRingProps {
   percentage: number;
   color: string;
   lightenedColor: string;
-  size: 'large' | 'small';
 }
 
 const ConsistencyRing: React.FC<ConsistencyRingProps> = ({ percentage, color, lightenedColor }) => {
