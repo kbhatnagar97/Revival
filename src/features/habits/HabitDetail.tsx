@@ -9,7 +9,7 @@ import HabitFormModal from './components/HabitFormModal';
 import HabitCard from './components/HabitCard';
 import ConsistencyRing from './components/ConsistencyRing';
 import Tooltip from '../../common/components/Tooltip'; 
-import { Bar } from 'react-chartjs-2';
+import { Chart } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -457,7 +457,7 @@ const HabitDetail = () => {
                 </div>
                 {chartConfig && chartConfig.data.labels.length > 0 ? (
                   <div className="chart-wrapper">
-                      <Bar ref={chartRef} options={chartConfig.options as any} data={chartConfig.data} />
+                      <Chart ref={chartRef} type="bar" options={chartConfig.options as any} data={chartConfig.data} />
                   </div>
                 ) : (
                   <p>No data to display for this habit yet.</p>

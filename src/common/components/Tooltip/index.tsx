@@ -14,7 +14,7 @@ const Tooltip: React.FC<TooltipProps> = ({ content }) => {
   
   const boxRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   // This effect calculates the tooltip's position once it's rendered into the DOM.
   useLayoutEffect(() => {
@@ -45,19 +45,19 @@ const Tooltip: React.FC<TooltipProps> = ({ content }) => {
       setStyle({
         top: `${top}px`,
         left: `${left}px`,
-        '--arrow-left': `${arrowLeft}px`,
+        ['--arrow-left' as string]: `${arrowLeft}px`,
       });
 
       // After calculating position, trigger the animation by setting it to visible.
       // A tiny delay ensures the browser applies the initial styles before transitioning.
-      timeoutRef.current = setTimeout(() => {
+      timeoutRef.current = window.setTimeout(() => {
         setIsVisible(true);
       }, 10);
     }
   }, [isRendered]);
 
   const showTooltip = () => {
-    if (timeoutRef.current) {
+    if (timeoutRef.current !== null) {
       clearTimeout(timeoutRef.current);
     }
     // Step 1: Render the component into the DOM. The useLayoutEffect will then run.
@@ -69,7 +69,7 @@ const Tooltip: React.FC<TooltipProps> = ({ content }) => {
     setIsVisible(false);
 
     // Step 2: After the animation completes (200ms), remove the component from the DOM.
-    timeoutRef.current = setTimeout(() => {
+    timeoutRef.current = window.setTimeout(() => {
       setIsRendered(false);
     }, 200); // This duration must match the CSS transition duration.
   };
