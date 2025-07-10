@@ -1,0 +1,97 @@
+@import '../Sidebar/Sidebar.scss';
+
+.layout {
+  display: flex;
+  background-color: $bg-main;
+  // The overflow-x hidden on the main layout container can be a failsafe
+  // against any rogue horizontal scrolling.
+  overflow-x: hidden;
+
+  &__content-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    transition: margin-left 0.3s ease-in-out;
+    
+    // FIX 1: Remove fixed width. As a flex item, it will grow automatically.
+    // width: 100%; // REMOVED
+    
+    // FIX 2: Add min-width: 0. This allows the flex item to shrink below its
+    // default minimum size, which is crucial when its content is wider than
+    // the available space (e.g., the chart before it resizes).
+    min-width: 0;
+
+    // FIX 3: Create a new stacking context. This ensures that child elements with
+    // a high z-index (like the tooltip) are not trapped "below" other layout
+    // elements like the fixed sidebar.
+    isolation: isolate;
+  }
+  
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 2rem;
+    background-color: $bg-main;
+    border-bottom: 1px solid $border-color;
+    flex-shrink: 0;
+
+    @media (max-width: ($breakpoint-desktop - 1px)) {
+      .layout__header-title {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+  }
+  
+  &__header-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0;
+  }
+
+  &__main-content {
+    flex-grow: 1;
+    padding: 2.5rem;
+    overflow-y: auto;
+    
+    @media (max-width: ($breakpoint-desktop - 1px)) {
+      padding: 1.5rem;
+    }
+  }
+
+  &__sidebar-toggle,
+  .galaxy-toggle {
+    z-index: 10;
+  }
+
+  &__sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: $text-primary;
+    cursor: pointer;
+    font-size: 1.75rem;
+    padding: 0;
+
+    @media (max-width: ($breakpoint-desktop - 1px)) {
+      display: block;
+    }
+  }
+
+  &__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+
+    @media (min-width: $breakpoint-desktop) {
+      display: none;
+    }
+  }
+}
