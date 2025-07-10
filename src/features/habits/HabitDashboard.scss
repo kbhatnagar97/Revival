@@ -9,150 +9,58 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #eae6e1;
-  padding-bottom: 1rem;
   flex-shrink: 0;
+}
+
+// NEW: Styles for the title group
+.header-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem; // Small gap between title and subtitle
 
   h2 {
     margin: 0;
     color: #442b22;
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+  
+  p {
+    margin: 0;
+    color: #a39189; // Muted color for the subtitle
+    font-size: 0.9rem;
+    font-weight: 500;
   }
 }
 
-.add-habit-btn {
+.create-habit-icon-btn {
   background-color: #2ecc71;
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 0.6rem 1.2rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.2s ease;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+  transition: all 0.2s ease-out;
+  
   &:hover {
     background-color: #27ae60;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(46, 204, 113, 0.4);
   }
 }
 
 .habit-list {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
   overflow-y: auto;
   flex-grow: 1;
-  align-content: start; // Prevents items from stretching vertically
-}
-
-// Styles for the HabitCard component
-.habit-card {
-  background-color: #fbfaf8;
-  border: 1px solid #eae6e1;
-  border-left: 5px solid transparent;
-  border-radius: 12px;
-  padding: 1rem 1.5rem;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    'info actions'
-    'progress progress';
-  gap: 0.5rem 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  position: relative;
-  overflow: hidden;
-
-  &.is-completed {
-    border-left-color: #2ecc71;
-    .habit-name {
-      text-decoration: line-through;
-      color: #a39189;
-    }
-  }
-}
-
-.habit-info {
-  grid-area: info;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  min-width: 0; // Allows text to truncate
-}
-
-.habit-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-
-.habit-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #442b22;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.habit-actions {
-  grid-area: actions;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.habit-progress-text {
-  font-family: monospace;
-  font-size: 1rem;
-  color: #a39189;
-  font-weight: 500;
-}
-
-.increment-btn {
-  background-color: #f5f2ef;
-  border: 1px solid #eae6e1;
-  color: #442b22;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  &:hover {
-    background-color: #2ecc71;
-    color: white;
-    border-color: #27ae60;
-  }
-  &:disabled {
-    background-color: #2ecc71;
-    color: white;
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.progress-bar-container {
-  grid-area: progress;
-  width: 100%;
-  height: 6px;
-  background-color: #eae6e1;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.3s ease-in-out;
 }
 
 .no-habits-message {

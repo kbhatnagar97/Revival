@@ -1,29 +1,33 @@
 @import '../Sidebar/Sidebar.scss';
 
+// === AESTHETIC PALETTE: ARTISAN CLAY & INK ===
+$bg-main: #fbfaf8;
+$text-primary: #442b22;
+$text-muted: #a39189;
+$border-color: #eae6e1;
+$hover-bg: #f5f2ef;
+
+// Structural Variables
+$sidebar-width: 280px;
+$breakpoint-desktop: 768px;
+
+
 .layout {
   display: flex;
   background-color: $bg-main;
-  // The overflow-x hidden on the main layout container can be a failsafe
-  // against any rogue horizontal scrolling.
-  overflow-x: hidden;
+  
+  // FIX 1: Constrain the entire layout to the height of the viewport.
+  height: 100vh; 
+  // FIX 2: Prevent the layout itself from ever scrolling.
+  // Scrolling will be handled by the main content area.
+  overflow: hidden;
 
   &__content-wrapper {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     transition: margin-left 0.3s ease-in-out;
-    
-    // FIX 1: Remove fixed width. As a flex item, it will grow automatically.
-    // width: 100%; // REMOVED
-    
-    // FIX 2: Add min-width: 0. This allows the flex item to shrink below its
-    // default minimum size, which is crucial when its content is wider than
-    // the available space (e.g., the chart before it resizes).
-    min-width: 0;
-
-    // FIX 3: Create a new stacking context. This ensures that child elements with
-    // a high z-index (like the tooltip) are not trapped "below" other layout
-    // elements like the fixed sidebar.
+    min-width: 0; 
     isolation: isolate;
   }
   
@@ -34,6 +38,7 @@
     padding: 1.25rem 2rem;
     background-color: $bg-main;
     border-bottom: 1px solid $border-color;
+    // This should not grow or shrink.
     flex-shrink: 0;
 
     @media (max-width: ($breakpoint-desktop - 1px)) {
@@ -55,6 +60,8 @@
   &__main-content {
     flex-grow: 1;
     padding: 2.5rem;
+    // FIX 3: This element will now correctly handle all vertical scrolling
+    // for page content, as its parent is constrained.
     overflow-y: auto;
     
     @media (max-width: ($breakpoint-desktop - 1px)) {

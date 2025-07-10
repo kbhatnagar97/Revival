@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, NavLink } from 'react-router-dom';
 import Sidebar from '../Sidebar/Sidebar';
 import GalaxyToggleButton from '../GalaxyToggleButton/GalaxyToggleButton';
 import { FaBars, FaTimes } from 'react-icons/fa';
@@ -29,8 +29,12 @@ const Layout: React.FC = () => {
 
   useEffect(() => {
     const getTitleFromPath = (path: string): string => {
+      // FIX: Check if the path starts with '/habit-tracker'
+      if (path.startsWith('/habit-tracker')) {
+        return 'Habit Tracker';
+      }
+      // Keep the logic for other pages
       switch (path) {
-        case '/counter': return 'Simple Counter';
         case '/gaussian-visualizer': return 'Gaussian Visualizer';
         default: return 'Project Portfolio';
       }
@@ -59,13 +63,15 @@ const Layout: React.FC = () => {
       <div className="layout__content-wrapper" style={contentWrapperStyle}>
         <header className="layout__header">
           <h1 className="layout__header-title">{headerTitle}</h1>
-          {isDesktop ? (
-            <GalaxyToggleButton onClick={toggleSidebar} isOpen={isSidebarOpen} />
-          ) : (
-            <button className="layout__sidebar-toggle" onClick={toggleSidebar}>
-              {isSidebarOpen ? <FaTimes /> : <FaBars />}
-            </button>
-          )}
+          <div className="layout__header-actions">
+            {isDesktop ? (
+              <GalaxyToggleButton onClick={toggleSidebar} isOpen={isSidebarOpen} />
+            ) : (
+              <button className="layout__sidebar-toggle" onClick={toggleSidebar}>
+                {isSidebarOpen ? <FaTimes /> : <FaBars />}
+              </button>
+            )}
+          </div>
         </header>
 
         <main className="layout__main-content">

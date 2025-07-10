@@ -1,0 +1,108 @@
+.habit-calendar {
+    width: 100%;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    
+    h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: #442b22;
+    }
+
+    button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #a39189;
+        font-size: 1rem;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.2s;
+        &:hover {
+            color: #442b22;
+            background-color: #f5f2ef;
+        }
+    }
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+.day-name {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #a39189;
+    font-weight: 600;
+    padding-bottom: 0.5rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.9rem;
+    color: #a39189;
+    background-color: transparent;
+    position: relative;
+    transition: all 0.2s;
+    border: 2px solid transparent; // Add border for selection state
+    padding: 0; // Reset padding for button element
+
+    &.is-clickable {
+        cursor: pointer;
+        &:hover {
+            background-color: #f5f2ef;
+        }
+    }
+
+    &.is-selected {
+        border-color: #3498db;
+        box-shadow: 0 0 0 2px #fbfaf8, 0 0 0 4px #3498db;
+    }
+
+    &.empty {
+        background-color: transparent;
+        cursor: default;
+    }
+    
+    .day-number {
+        z-index: 1;
+    }
+    
+    .completion-dot {
+        position: absolute;
+        bottom: 15%;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    &.is-today .day-number {
+        background-color: #f5f2ef;
+        color: #442b22;
+        font-weight: 700;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &.is-completed {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        font-weight: 700;
+    }
+}
