@@ -1,12 +1,20 @@
 .consistency-ring-container {
   width: 100%;
-  max-width: 220px;
   margin: 0 auto;
 }
 
+.consistency-ring-container--large {
+  max-width: 220px;
+}
+
+.consistency-ring-container--small {
+  max-width: 150px;
+}
+
 .consistency-ring {
-  transform: rotate(-90deg);
-  overflow: visible; // Allow the glow to be visible
+  // FIX: NO ROTATION. This removes the source of the cross-browser bug.
+  overflow: visible;
+  filter: drop-shadow(0 6px 12px rgba(68, 43, 34, 0.1));
 }
 
 .consistency-ring__background {
@@ -15,20 +23,22 @@
   
 .consistency-ring__progress {
   fill: transparent;
-  // This creates the beautiful, rounded ends
-  stroke-linecap: round; 
+  stroke-linecap: round;
   transition: stroke-dashoffset 0.9s cubic-bezier(0.25, 1, 0.5, 1);
-  // Apply the glow filter defined in the SVG
-  filter: url(#glow-filter);
 }
 
-// Styles for the SVG <text> element
 .consistency-ring__text-svg {
-  // Counter-rotate the text to be upright
-  transform: rotate(90deg);
-  transform-origin: 50% 50%;
+  // FIX: NO ROTATION NEEDED. The text is now naturally upright.
   fill: #442b22;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  font-size: 4rem; // Large, dominant percentage
   font-weight: 700;
+}
+
+// Apply font size based on the parent container's size class
+.consistency-ring-container--large .consistency-ring__text-svg {
+  font-size: 3rem;
+}
+
+.consistency-ring-container--small .consistency-ring__text-svg {
+  font-size: 2.75rem;
 }
