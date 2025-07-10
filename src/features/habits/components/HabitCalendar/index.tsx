@@ -59,7 +59,6 @@ const HabitCalendar: React.FC<HabitCalendarProps> = ({
   }
 
   for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
-    const thisDate = new Date(Date.UTC(year, month, day));
     const dateString = getLocalDateString(new Date(year, month, day));
 
     const completionInfo = completionMap.get(dateString);

@@ -70,7 +70,11 @@ const HabitFormModal: React.FC<HabitFormModalProps> = ({ habitToEdit, onClose })
     const { name, goal, icon, color, days } = formData;
     
     if (habitToEdit) {
-      updateHabit(habitToEdit.id, { name, goal, count: habitToEdit.count, icon, color, days });
+      updateHabit(habitToEdit.id, {
+        name, goal, count: habitToEdit.count, icon, color, days,
+        debt: 0,
+        surplus: 0
+      });
     } else {
       addHabit({ name, goal, icon, color, days });
     }

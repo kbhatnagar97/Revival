@@ -8,7 +8,7 @@ import HabitCalendar from './components/HabitCalendar';
 import HabitFormModal from './components/HabitFormModal';
 import HabitCard from './components/HabitCard';
 import ConsistencyRing from './components/ConsistencyRing';
-import Tooltip from '../../common/components/Tooltip';
+import Tooltip from '../../common/components/Tooltip'; 
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -45,7 +45,7 @@ const calculateStreaks = (completionData: { [date: string]: number } = {}, goal:
   if (completedDates.length === 0) return { current: 0, best: 0 };
 
   let currentStreak = 0;
-  let checkDate = new Date();
+  const checkDate = new Date();
   while (true) {
     const dayOfWeek = checkDate.getDay();
     const dateString = getLocalDateString(checkDate);
@@ -73,7 +73,7 @@ const calculateStreaks = (completionData: { [date: string]: number } = {}, goal:
     let tempStreak = 1;
     for (let i = 0; i < completedDates.length - 1; i++) {
       let gapIsClean = true;
-      let dateInGap = new Date(completedDates[i+1]);
+      const dateInGap = new Date(completedDates[i+1]);
       dateInGap.setDate(dateInGap.getDate() + 1);
       const gapEndDate = completedDates[i];
       while (dateInGap < gapEndDate) {
@@ -234,9 +234,9 @@ const HabitDetail = () => {
             startDate.setDate(today.getDate() - 29);
             break;
         case 'all':
-            const allDates = Object.keys(mainHabit.completionData).sort();
+            { const allDates = Object.keys(mainHabit.completionData).sort();
             startDate = allDates.length > 0 ? new Date(allDates[0] + "T00:00:00") : today;
-            break;
+            break; }
     }
     
     for (let d = new Date(startDate); d <= today; d.setDate(d.getDate() + 1)) {
@@ -377,9 +377,7 @@ const HabitDetail = () => {
             <div className="stats-container">
               <h3 className="container-title">
                 All-Time Statistics
-                <Tooltip content="Metrics calculated since your very first entry for this habit.">
-                  <FaIcons.FaInfoCircle />
-                </Tooltip>
+                <Tooltip content="Metrics calculated since your very first entry for this habit." />
               </h3>
               <div className="stats-grid">
                   <div className="stat-card">
@@ -388,9 +386,7 @@ const HabitDetail = () => {
                         <div className="stat-value">{currentStreak}</div>
                         <div className="stat-label">
                             Current Streak
-                            <Tooltip content="Consecutive scheduled days completed, up to today.">
-                                <FaIcons.FaInfoCircle />
-                            </Tooltip>
+                            <Tooltip content="Consecutive scheduled days completed, up to today." />
                         </div>
                     </div>
                   </div>
@@ -400,9 +396,7 @@ const HabitDetail = () => {
                         <div className="stat-value">{bestStreak}</div>
                         <div className="stat-label">
                             Best Streak
-                            <Tooltip content="The longest-ever streak of consecutive completions.">
-                                <FaIcons.FaInfoCircle />
-                            </Tooltip>
+                            <Tooltip content="The longest-ever streak of consecutive completions." />
                         </div>
                     </div>
                   </div>
@@ -412,9 +406,7 @@ const HabitDetail = () => {
                         <div className="stat-value">{totalCompletions}</div>
                         <div className="stat-label">
                             Completions
-                            <Tooltip content="Total number of times the daily goal has been met.">
-                                <FaIcons.FaInfoCircle />
-                            </Tooltip>
+                            <Tooltip content="Total number of times the daily goal has been met." />
                         </div>
                     </div>
                   </div>
@@ -424,9 +416,7 @@ const HabitDetail = () => {
                         <div className="stat-value stat-value--surplus">{surplusPercentage}%</div>
                         <div className="stat-label">
                             Surplus
-                             <Tooltip content="Percentage of goal accumulated from extra completions.">
-                                <FaIcons.FaInfoCircle />
-                            </Tooltip>
+                             <Tooltip content="Percentage of goal accumulated from extra completions." />
                         </div>
                     </div>
                   </div>
@@ -436,9 +426,7 @@ const HabitDetail = () => {
                         <div className="stat-value stat-value--debt">{debtPercentage}%</div>
                         <div className="stat-label">
                             Debt
-                            <Tooltip content="Percentage of goal owed from missed completions.">
-                                <FaIcons.FaInfoCircle />
-                            </Tooltip>
+                            <Tooltip content="Percentage of goal owed from missed completions." />
                         </div>
                     </div>
                   </div>
@@ -452,9 +440,7 @@ const HabitDetail = () => {
                         </div>
                         <div className="stat-label">
                             Net Balance
-                            <Tooltip content="Your total surplus completions minus total debt.">
-                                <FaIcons.FaInfoCircle />
-                            </Tooltip>
+                            <Tooltip content="Your total surplus completions minus total debt." />
                         </div>
                     </div>
                   </div>
@@ -483,38 +469,30 @@ const HabitDetail = () => {
                   <div className="consistency-pod">
                     <h4 className="pod-title">
                         All-Time Consistency
-                        <Tooltip content="Your overall success rate since you started tracking.">
-                          <FaIcons.FaInfoCircle />
-                        </Tooltip>
+                        <Tooltip content="Your overall success rate since you started tracking." />
                     </h4>
-                    <ConsistencyRing percentage={allTimeConsistency} color={mainHabit.color} lightenedColor={lightenColor(mainHabit.color, 40)} size="large" />
+                    <ConsistencyRing percentage={allTimeConsistency} color={mainHabit.color} lightenedColor={lightenColor(mainHabit.color, 40)} />
                   </div>
                   <div className="consistency-pod">
                     <h4 className="pod-title">
                         7-Day Focus
-                        <Tooltip content="Your success rate over the last week.">
-                          <FaIcons.FaInfoCircle />
-                        </Tooltip>
+                        <Tooltip content="Your success rate over the last week." />
                     </h4>
-                    <ConsistencyRing percentage={weeklyFocus} color={mainHabit.color} lightenedColor={lightenColor(mainHabit.color, 40)} size="small" />
+                    <ConsistencyRing percentage={weeklyFocus} color={mainHabit.color} lightenedColor={lightenColor(mainHabit.color, 40)} />
                   </div>
                   <div className="consistency-pod">
                     <h4 className="pod-title">
                         Surplus Rate
-                        <Tooltip content="Of the days you met your goal, the percentage of time you went above and beyond.">
-                          <FaIcons.FaInfoCircle />
-                        </Tooltip>
+                        <Tooltip content="Of the days you met your goal, the percentage of time you went above and beyond." />
                     </h4>
-                    <ConsistencyRing percentage={surplusRate} color={mainHabit.color} lightenedColor={lightenColor(mainHabit.color, 40)} size="small" />
+                    <ConsistencyRing percentage={surplusRate} color={mainHabit.color} lightenedColor={lightenColor(mainHabit.color, 40)} />
                   </div>
                   <div className="consistency-pod">
                     <h4 className="pod-title">
                         Daily Snapshot
-                        <Tooltip content="Progress for the currently selected date on the calendar.">
-                          <FaIcons.FaInfoCircle />
-                        </Tooltip>
+                        <Tooltip content="Progress for the currently selected date on the calendar." />
                     </h4>
-                    <ConsistencyRing percentage={selectedDayProgress} color={mainHabit.color} lightenedColor={lightenColor(mainHabit.color, 40)} size="small" />
+                    <ConsistencyRing percentage={selectedDayProgress} color={mainHabit.color} lightenedColor={lightenColor(mainHabit.color, 40)} />
                   </div>
               </div>
             </div>
