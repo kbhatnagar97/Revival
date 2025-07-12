@@ -196,11 +196,37 @@
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
 
-  @media (min-width: 768px) {
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    .stat-card {
+      font-size: 1.1rem;
+      min-height: 80px;
+      padding: 1.25rem 1rem;
+    }
+  }
+
+  @media (min-width: 601px) and (max-width: 1023px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    .stat-card {
+      font-size: 1rem;
+      min-height: 70px;
+      padding: 1.25rem 1rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
     grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    .stat-card {
+      font-size: 1rem;
+      min-height: 60px;
+      padding: 1.25rem 1.5rem;
+    }
   }
 }
 
@@ -259,15 +285,16 @@
   gap: 0.5rem;
 }
 
-// NEW RESPONSIVE GAUGE CLUSTER
 .consistency-cluster {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
   gap: 2rem 1.5rem;
   align-items: stretch;
   width: 100%;
-
-  // Desktop: 4 items in a row
+  min-width: 0;
+  @media (min-width: 600px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
   @media (min-width: 1024px) {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -281,7 +308,6 @@
   justify-content: stretch;
   min-width: 0;
   max-width: 100%;
-
   .pod-title {
     font-size: 1rem;
     font-weight: 600;
@@ -294,13 +320,11 @@
     width: 100%;
     word-break: break-word;
   }
-
   .consistency-ring-container {
     width: 100%;
     max-width: 180px;
     margin: 0 auto;
     box-sizing: border-box;
-    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
