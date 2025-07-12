@@ -15,6 +15,7 @@ import annotationPlugin from 'chartjs-plugin-annotation';
 import * as vega from 'vega-statistics';
 import Tooltip from '../../common/components/Tooltip';
 import SimpleHeader from '../../common/components/SimpleHeader/SimpleHeader';
+import { useDocumentMeta } from '../../common/hooks/useDocumentMeta';
 
 import {
   INITIAL_MEAN,
@@ -41,6 +42,11 @@ ChartJS.register(
 );
 
 const GaussianVisualizerPage: React.FC = () => {
+  useDocumentMeta({ 
+    title: 'Gaussian Visualizer - Revival', 
+    favicon: '/gaussian-visualizer-favicon.png' // You can replace this with an actual favicon
+  });
+
   const [initialMean, setInitialMean] = useState(INITIAL_MEAN);
   const [initialStdev, setInitialStdev] = useState(INITIAL_STDEV);
   const [initialLsl, setInitialLsl] = useState(INITIAL_LSL);
@@ -203,64 +209,11 @@ const GaussianVisualizerPage: React.FC = () => {
     }
   };
 
-  const handleLslChange = (value: number) => {
-    if (value < usl) {
-      setLsl(value);
-    }
-  };
-
-  const handleUslChange = (value: number) => {
-    if (value > lsl) {
-      setUsl(value);
-    }
-  };
-
-  const handleInitialLslBlur = () => {
-    const numValue = parseFloat(initialLslInput);
-    const currentUsl = parseFloat(initialUslInput) || initialUsl;
-    if (!isNaN(numValue) && numValue < currentUsl) {
-      // Valid LSL
-    } else {
-      // Invalid LSL, reset to current valid value
-      setInitialLslInput(String(initialLsl));
-    }
-  };
-
-  const handleInitialUslBlur = () => {
-    const numValue = parseFloat(initialUslInput);
-    const currentLsl = parseFloat(initialLslInput) || initialLsl;
-    if (!isNaN(numValue) && numValue > currentLsl) {
-      // Valid USL
-    } else {
-      // Invalid USL, reset to current valid value
-      setInitialUslInput(String(initialUsl));
-    }
-  };
-
   const handleApplyInitialSettings = () => {
     const newInitialMean = parseFloat(initialMeanInput) || INITIAL_MEAN;
-    const newInitialStdev = Math.max(0.1, parseFloat(initialStdevInput) || INITIAL_STDEV);
-    let newInitialLsl = parseFloat(initialLslInput) || INITIAL_LSL;
-    let newInitialUsl = parseFloat(initialUslInput) || INITIAL_USL;
-    
-    // Validate that LSL < USL
-    if (newInitialLsl >= newInitialUsl) {
-      // If LSL >= USL, reset to current valid values
-      newInitialLsl = lsl;
-      newInitialUsl = usl;
-      setInitialLslInput(String(lsl));
-      setInitialUslInput(String(usl));
-      alert('Error: LSL must be less than USL. Values have been reset to current valid settings.');
-      return;
-    }
-
-    // Validate standard deviation is positive
-    if (newInitialStdev <= 0) {
-      setInitialStdevInput(String(INITIAL_STDEV));
-      alert('Error: Standard deviation must be greater than 0.');
-      return;
-    }
-    
+    const newInitialStdev = parseFloat(initialStdevInput) || INITIAL_STDEV;
+    const newInitialLsl = parseFloat(initialLslInput) || INITIAL_LSL;
+    const newInitialUsl = parseFloat(initialUslInput) || INITIAL_USL;
     setInitialMean(newInitialMean);
     setInitialStdev(newInitialStdev);
     setInitialLsl(newInitialLsl);
@@ -287,84 +240,7 @@ const GaussianVisualizerPage: React.FC = () => {
             />
           </div>
           <div className='gv-panels-container'>
-            <div className='gv-panel gv-panel--bordered gv-panel--initial-settings'>
-              <h3 className='panel-title label-with-tooltip'>
-                {TEXT_CONTENT.PANEL_TITLES.INITIAL_SETTINGS}
-                <Tooltip content={TEXT_CONTENT.TOOLTIPS.INITIAL_SETTINGS} />
-              </h3>
-              <div className='control-group'>
-                <div className='dual-inputs four-up'>
-                  <div className='input-with-label'>
-                    <label htmlFor='init-mean-input'>
-                      {TEXT_CONTENT.CONTROL_LABELS.MEAN}
-                    </label>
-                    <input
-                      type='number'
-                      id='init-mean-input'
-                      className='native-input'
-                      value={initialMeanInput}
-                      onChange={(e) => setInitialMeanInput(e.target.value)}
-                    />
-                  </div>
-                  <div className='input-with-label'>
-                    <label htmlFor='init-stdev-input'>
-                      {TEXT_CONTENT.CONTROL_LABELS.STDEV}
-                    </label>
-                    <input
-                      type='number'
-                      id='init-stdev-input'
-                      className='native-input'
-                      value={initialStdevInput}
-                      onChange={(e) => setInitialStdevInput(e.target.value)}
-                      min='0.1'
-                    />
-                  </div>
-                  <div className='input-with-label'>
-                    <label htmlFor='init-lsl-input'>
-                      {TEXT_CONTENT.CONTROL_LABELS.LSL}
-                    </label>
-                    <input
-                      type='number'
-                      id='init-lsl-input'
-                      className='native-input'
-                      value={initialLslInput}
-                      onChange={(e) => setInitialLslInput(e.target.value)}
-                      onBlur={handleInitialLslBlur}
-                      onKeyDown={(e) =>
-                        e.key === 'Enter' &&
-                        (e.target as HTMLInputElement).blur()
-                      }
-                    />
-                  </div>
-                  <div className='input-with-label'>
-                    <label htmlFor='init-usl-input'>
-                      {TEXT_CONTENT.CONTROL_LABELS.USL}
-                    </label>
-                    <input
-                      type='number'
-                      id='init-usl-input'
-                      className='native-input'
-                      value={initialUslInput}
-                      onChange={(e) => setInitialUslInput(e.target.value)}
-                      onBlur={handleInitialUslBlur}
-                      onKeyDown={(e) =>
-                        e.key === 'Enter' &&
-                        (e.target as HTMLInputElement).blur()
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className='gv-button-container'>
-                <button
-                  className='gv-button'
-                  onClick={handleApplyInitialSettings}
-                >
-                  {TEXT_CONTENT.BUTTONS.APPLY_DEFAULTS}
-                </button>
-              </div>
-            </div>
-            <div className='gv-panel gv-panel--bordered gv-panel--controls'>
+            <div className='gv-panel gv-panel--bordered'>
               <h3 className='panel-title'>
                 {TEXT_CONTENT.PANEL_TITLES.CONTROLS}
               </h3>
@@ -425,65 +301,115 @@ const GaussianVisualizerPage: React.FC = () => {
                 </div>
               </div>
               <div className='control-group'>
-                <label htmlFor='lsl-slider' className='control-label label-with-tooltip'>
-                  {TEXT_CONTENT.CONTROL_LABELS.LSL}
-                  <Tooltip content={TEXT_CONTENT.TOOLTIPS.LSL} />
+                <label className='control-label label-with-tooltip'>
+                  {TEXT_CONTENT.CONTROL_LABELS.SPEC_LIMITS}
+                  <Tooltip content={TEXT_CONTENT.TOOLTIPS.SPEC_LIMITS} />
                 </label>
-                <div className='slider-group'>
-                  <input
-                    type='range'
-                    id='lsl-slider'
-                    className='native-slider'
-                    min={axisMin}
-                    max={usl - 0.1}
-                    step={0.1}
-                    value={lsl}
-                    onChange={(e) => handleLslChange(parseFloat(e.target.value))}
-                  />
-                  <input
-                    type='number'
-                    className='native-input'
-                    value={lslInput}
-                    onChange={(e) => setLslInput(e.target.value)}
-                    onBlur={handleLslBlur}
-                    onKeyDown={(e) =>
-                      e.key === 'Enter' &&
-                      (e.target as HTMLInputElement).blur()
-                    }
-                  />
-                </div>
-              </div>
-              <div className='control-group'>
-                <label htmlFor='usl-slider' className='control-label label-with-tooltip'>
-                  {TEXT_CONTENT.CONTROL_LABELS.USL}
-                  <Tooltip content={TEXT_CONTENT.TOOLTIPS.USL} />
-                </label>
-                <div className='slider-group'>
-                  <input
-                    type='range'
-                    id='usl-slider'
-                    className='native-slider'
-                    min={lsl + 0.1}
-                    max={axisMax}
-                    step={0.1}
-                    value={usl}
-                    onChange={(e) => handleUslChange(parseFloat(e.target.value))}
-                  />
-                  <input
-                    type='number'
-                    className='native-input'
-                    value={uslInput}
-                    onChange={(e) => setUslInput(e.target.value)}
-                    onBlur={handleUslBlur}
-                    onKeyDown={(e) =>
-                      e.key === 'Enter' &&
-                      (e.target as HTMLInputElement).blur()
-                    }
-                  />
+                <div className='dual-inputs'>
+                  <div className='input-with-label'>
+                    <label htmlFor='lsl-input'>
+                      {TEXT_CONTENT.CONTROL_LABELS.LSL}
+                    </label>
+                    <input
+                      type='number'
+                      id='lsl-input'
+                      className='native-input'
+                      value={lslInput}
+                      onChange={(e) => setLslInput(e.target.value)}
+                      onBlur={handleLslBlur}
+                      onKeyDown={(e) =>
+                        e.key === 'Enter' &&
+                        (e.target as HTMLInputElement).blur()
+                      }
+                    />
+                  </div>
+                  <div className='input-with-label'>
+                    <label htmlFor='usl-input'>
+                      {TEXT_CONTENT.CONTROL_LABELS.USL}
+                    </label>
+                    <input
+                      type='number'
+                      id='usl-input'
+                      className='native-input'
+                      value={uslInput}
+                      onChange={(e) => setUslInput(e.target.value)}
+                      onBlur={handleUslBlur}
+                      onKeyDown={(e) =>
+                        e.key === 'Enter' &&
+                        (e.target as HTMLInputElement).blur()
+                      }
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-            <div className='gv-panel gv-panel--metrics'>
+            <div className='gv-panel gv-panel--bordered'>
+              <h3 className='panel-title label-with-tooltip'>
+                {TEXT_CONTENT.PANEL_TITLES.INITIAL_SETTINGS}
+                <Tooltip content={TEXT_CONTENT.TOOLTIPS.INITIAL_SETTINGS} />
+              </h3>
+              <div className='control-group'>
+                <div className='dual-inputs four-up'>
+                  <div className='input-with-label'>
+                    <label htmlFor='init-mean-input'>
+                      {TEXT_CONTENT.CONTROL_LABELS.MEAN}
+                    </label>
+                    <input
+                      type='number'
+                      id='init-mean-input'
+                      className='native-input'
+                      value={initialMeanInput}
+                      onChange={(e) => setInitialMeanInput(e.target.value)}
+                    />
+                  </div>
+                  <div className='input-with-label'>
+                    <label htmlFor='init-stdev-input'>
+                      {TEXT_CONTENT.CONTROL_LABELS.STDEV}
+                    </label>
+                    <input
+                      type='number'
+                      id='init-stdev-input'
+                      className='native-input'
+                      value={initialStdevInput}
+                      onChange={(e) => setInitialStdevInput(e.target.value)}
+                    />
+                  </div>
+                  <div className='input-with-label'>
+                    <label htmlFor='init-lsl-input'>
+                      {TEXT_CONTENT.CONTROL_LABELS.LSL}
+                    </label>
+                    <input
+                      type='number'
+                      id='init-lsl-input'
+                      className='native-input'
+                      value={initialLslInput}
+                      onChange={(e) => setInitialLslInput(e.target.value)}
+                    />
+                  </div>
+                  <div className='input-with-label'>
+                    <label htmlFor='init-usl-input'>
+                      {TEXT_CONTENT.CONTROL_LABELS.USL}
+                    </label>
+                    <input
+                      type='number'
+                      id='init-usl-input'
+                      className='native-input'
+                      value={initialUslInput}
+                      onChange={(e) => setInitialUslInput(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className='gv-button-container'>
+                <button
+                  className='gv-button'
+                  onClick={handleApplyInitialSettings}
+                >
+                  {TEXT_CONTENT.BUTTONS.APPLY_DEFAULTS}
+                </button>
+              </div>
+            </div>
+            <div className='gv-panel'>
               <h3 className='panel-title'>
                 {TEXT_CONTENT.PANEL_TITLES.METRICS}
               </h3>

@@ -49,14 +49,6 @@ $border-color: #eae6e1;
   align-items: center;
   justify-content: center;
   min-width: 0;
-
-  @media (max-width: 768px) {
-    min-height: 250px;
-  }
-
-  @media (max-width: 480px) {
-    min-height: 200px;
-  }
 }
 
 .gv-panels-container {
@@ -75,20 +67,6 @@ $border-color: #eae6e1;
   @media (max-width: 768px) {
     gap: 1rem;
     padding-top: 1rem;
-  }
-
-  // Desktop layout: Initial Settings, Controls (middle), Metrics
-  @media (min-width: 1201px) {
-    .gv-panel--initial-settings { order: 1; }
-    .gv-panel--controls { order: 2; }
-    .gv-panel--metrics { order: 3; }
-  }
-
-  // Mobile layout: Controls (top), Initial Settings, Metrics  
-  @media (max-width: 1200px) {
-    .gv-panel--controls { order: 1; }
-    .gv-panel--initial-settings { order: 2; }
-    .gv-panel--metrics { order: 3; }
   }
 }
 

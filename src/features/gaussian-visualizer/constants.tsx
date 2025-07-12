@@ -37,91 +37,53 @@ export const TEXT_CONTENT = {
 
   TOOLTIPS: {
     MEAN: (
-      <span>
-        <strong>Mean (Average)</strong><br/>
-        The center point of your data distribution. 
-        This represents the typical value you can expect from your process.
-      </span>
+      <span>The average value or mathematical center of the distribution.</span>
     ),
     STDEV: (
       <span>
-        <strong>Standard Deviation</strong><br/>
-        Measures how much your data varies from the mean. 
-        Smaller values indicate more consistent, predictable results.
+        A measure of the variation or spread of the distribution. A smaller
+        value means less variation.
       </span>
-    ),
-    LSL: (
-      <>
-        <strong>LSL: Lower Specification Limit</strong>
-        <p>
-          The minimum acceptable measurement value.
-          Any result below this limit is considered a defect.
-        </p>
-        <p className='significance'>
-          <strong>Example:</strong> For nut-bolt assemblies with 20mm bolts, LSL might be 19.9mm - 
-          anything smaller won't fit properly in the nut.
-        </p>
-      </>
-    ),
-    USL: (
-      <>
-        <strong>USL: Upper Specification Limit</strong>
-        <p>
-          The maximum acceptable measurement value.
-          Any result above this limit is considered a defect.
-        </p>
-        <p className='significance'>
-          <strong>Example:</strong> For nut-bolt assemblies with 20mm bolts, USL might be 20.1mm - 
-          anything larger won't thread into the nut.
-        </p>
-      </>
     ),
     PP: (
       <>
-        <strong>Pp: Process Potential</strong>
+        <strong>Pp: Potential Capability</strong>
         <p>
-          Shows how capable your process would be if perfectly centered between limits.
-          Indicates the best-case scenario for your process capability.
+          Measures the potential (overall) capability of the process, assuming
+          it's perfectly centered.
         </p>
-        <p><strong>Formula:</strong> <code>(USL - LSL) ÷ (6 × Standard Deviation)</code></p>
+        <code>(USL - LSL) / (6 * StDev)</code>
         <p className='significance'>
-          <strong>Interpretation:</strong><br/>
-          • &lt; 1.0: Process spread exceeds specification limits<br/>
-          • 1.33: Industry standard for acceptable processes<br/>
-          • &gt; 1.67: Excellent process with good margins
+          Significance: A higher value means the process spread is much smaller
+          than the allowed specification width. It is an "ideal" measure.
         </p>
       </>
     ),
     PPK: (
       <>
-        <strong>Ppk: Actual Process Performance</strong>
+        <strong>Ppk: Actual Capability Index</strong>
         <p>
-          Shows your real-world process capability considering actual centering.
-          This is the most important capability metric.
+          Measures the actual capability of the process, taking its real-world
+          centering into account.
         </p>
-        <p><strong>Formula:</strong> <code>min[(USL - Mean) ÷ (3 × StDev), (Mean - LSL) ÷ (3 × StDev)]</code></p>
+        <code>min[(USL - Mean) / (3 * StDev), (Mean - LSL) / (3 * StDev)]</code>
         <p className='significance'>
-          <strong>Interpretation:</strong><br/>
-          • &lt; 1.0: Process is producing defects<br/>
-          • 1.33: Good process - industry standard<br/>
-          • &gt; 1.67: Excellent process performance
+          {
+            'Significance: This is the most critical capability metric. A Ppk < 1.0 indicates the process is producing defects. A common target is ≥ 1.33.'
+          }
         </p>
       </>
     ),
     PPM: (
       <>
-        <strong>PPM: Parts Per Million Defects</strong>
+        <strong>PPM: Parts Per Million</strong>
         <p>
-          Expected number of defective parts out of one million produced.
-          Lower numbers indicate better quality.
+          The expected number of defective parts for every one million parts
+          produced, based on the current distribution and limits.
         </p>
-        <p><strong>Formula:</strong> <code>(Total Area Outside Limits) × 1,000,000</code></p>
+        <code>(Total Area Outside Limits) * 1,000,000</code>
         <p className='significance'>
-          <strong>Quality Levels:</strong><br/>
-          • 0-100 PPM: Excellent quality<br/>
-          • 100-1,000 PPM: Good quality<br/>
-          • 1,000-10,000 PPM: Acceptable for some industries<br/>
-          • &gt;10,000 PPM: Poor quality
+          Significance: A direct, intuitive measure of quality. Lower is better.
         </p>
       </>
     ),
@@ -142,11 +104,12 @@ export const TEXT_CONTENT = {
       <>
         <strong>Initial Settings Panel</strong>
         <p>
-          Define your custom default values for the visualizer.
-          These will be used as starting points for new sessions.
+          Use this panel to define your own custom "default" state for the
+          visualizer.
         </p>
         <p className='significance'>
-          Click 'Apply' to save these values as your new defaults.
+          Clicking 'Apply' will save these values and use them for the 'Reset
+          Controls & View' button.
         </p>
       </>
     ),

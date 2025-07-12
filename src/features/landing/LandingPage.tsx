@@ -1,15 +1,18 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { FaGithub, FaEnvelope, FaArrowRight, FaLinkedin, FaStackOverflow, FaInstagram } from 'react-icons/fa';
+import { FaGithub, FaEnvelope, FaArrowRight } from 'react-icons/fa';
+import { useDocumentMeta } from '../../common/hooks/useDocumentMeta';
 import './LandingPage.scss';
 
 const LandingPage: React.FC = () => {
+  useDocumentMeta({ 
+    title: 'Revival - Kshitij Bhatnagar Portfolio', 
+    favicon: '/bulb-favicon.png' // Keep the existing bulb icon for landing
+  });
+
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
-    // Smooth scrolling behavior
-    document.documentElement.style.scrollBehavior = 'smooth';
-
     // Create intersection observer for scroll animations
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -38,52 +41,22 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className='landing-page'>
-      {/* --- Animated Background --- */}
-      {/* This element is now more important with the frosted glass effect */}
-      <div className='background-animations'>
-        <div className='shape shape-1'></div>
-        <div className='shape shape-2'></div>
-        <div className='shape shape-3'></div>
-      </div>
-
-      {/* Hero Section with Enhanced Interactivity */}
+      {/* Hero Section */}
       <section className='hero'>
         <div className='hero__content'>
-          <h1 className='hero__title scroll-animate fade-in-up'>
-            I build systems that reveal patterns.
-          </h1>
-          <p className='hero__subtitle scroll-animate fade-in-up'>
-            Whether in our daily lives or in complex data, I create tools that transform information into insights and habits into sustainable growth.
+          <h1 className='hero__title'>I build systems that reveal patterns.</h1>
+          <p className='hero__subtitle'>
+            Whether in our daily lives or in complex data...
           </p>
-          <div className='hero__cta scroll-animate fade-in-up'>
-            <a href="#projects" className='hero__button'>
-              Explore My Work <FaArrowRight />
-            </a>
-          </div>
-        </div>
-        <div className='hero__scroll-indicator scroll-animate fade-in-up'>
-          <div className='scroll-arrow'></div>
         </div>
       </section>
 
-      {/* Projects Section with Enhanced Layout */}
-      <section id="projects" className='projects-section'>
-        <div className='section-header scroll-animate fade-in-up'>
-          <h2 className='section-title'>Featured Projects</h2>
-          <p className='section-subtitle'>Tools that combine technical excellence with real-world impact</p>
-        </div>
-
       {/* Project 1: Habit Tracker */}
-      <div className='project-showcase project-showcase--habit-tracker'>
+      <section className='project-showcase project-showcase--habit-tracker'>
         <div className='project-showcase__text scroll-animate slide-in-left'>
-          <div className='project-badge'>
-            <span className='tech-tag'>React</span>
-            <span className='tech-tag'>TypeScript</span>
-            <span className='tech-tag'>Chart.js</span>
-          </div>
-          <h3 className='project-showcase__title'>
+          <h2 className='project-showcase__title'>
             The System for Self-Improvement
-          </h3>
+          </h2>
           <div className='project-showcase__description'>
             <p>
               Building better habits isn't just about motivation—it's about
@@ -98,14 +71,9 @@ const LandingPage: React.FC = () => {
               represents commitment.
             </p>
           </div>
-          <div className='project-showcase__actions'>
-            <Link to='/habit-tracker' className='project-showcase__cta project-showcase__cta--primary'>
-              Live Demo <FaArrowRight />
-            </Link>
-            <a href='https://github.com/kbhatnagar97/Revival' className='project-showcase__cta project-showcase__cta--secondary' target='_blank' rel='noopener noreferrer'>
-              <FaGithub /> Source Code
-            </a>
-          </div>
+          <Link to='/habit-tracker' className='project-showcase__cta'>
+            View Live App <FaArrowRight />
+          </Link>
         </div>
         <div className='project-showcase__visual scroll-animate slide-in-right'>
           <div className='project-showcase__demo'>
@@ -116,10 +84,10 @@ const LandingPage: React.FC = () => {
             />
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Project 2: Gaussian Visualizer */}
-      <div className='project-showcase project-showcase--gaussian'>
+      <section className='project-showcase project-showcase--gaussian'>
         <div className='project-showcase__visual scroll-animate slide-in-left'>
           <div className='project-showcase__demo'>
             <img
@@ -130,14 +98,9 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
         <div className='project-showcase__text scroll-animate slide-in-right'>
-          <div className='project-badge'>
-            <span className='tech-tag'>React</span>
-            <span className='tech-tag'>TypeScript</span>
-            <span className='tech-tag'>Chart.js</span>
-          </div>
-          <h3 className='project-showcase__title'>
+          <h2 className='project-showcase__title'>
             The System for Understanding Data
-          </h3>
+          </h2>
           <div className='project-showcase__description'>
             <p>
               Statistics come alive when you can see them change in real-time.
@@ -146,37 +109,30 @@ const LandingPage: React.FC = () => {
               instant visual feedback.
             </p>
             <p>
-              Built with cutting-edge technology that Chart.js doesn't readily provide, 
-              using lightweight statistical libraries running mathematical computations 
-              under the hood to make this level of real-time visualization possible. 
-              Watch as process capability metrics update instantly, revealing the story 
+              Powered by Vega-statistics for precise calculations and Chart.js
+              with custom annotations for dynamic visualizations. Watch as
+              process capability metrics update instantly, revealing the story
               hidden in your data.
             </p>
           </div>
-          <div className='project-showcase__actions'>
-            <Link to='/gaussian-visualizer' className='project-showcase__cta project-showcase__cta--primary'>
-              Interactive Demo <FaArrowRight />
-            </Link>
-            <a href='https://github.com/kbhatnagar97/Revival' className='project-showcase__cta project-showcase__cta--secondary' target='_blank' rel='noopener noreferrer'>
-              <FaGithub /> Source Code
-            </a>
-          </div>
+          <Link to='/gaussian-visualizer' className='project-showcase__cta'>
+            Interact with Viz <FaArrowRight />
+          </Link>
         </div>
-      </div>
       </section>
 
-      {/* --- About Section (COMPLETELY REFACTORED) --- */}
+      {/* About Section */}
       <section className='about'>
-        <div className='about__inner scroll-animate fade-in-up'>
-          <div className='about__avatar'>
-            <img src="/src/common/assets/images/Profile.JPG" alt="Kshitij Bhatnagar" />
+        <h2 className='about__title scroll-animate fade-in-up'>
+          About the Developer
+        </h2>
+        <div className='about__content scroll-animate fade-in-up'>
+          <div className='about__photo'>
+            <div className='about__avatar'>
+              {/* Placeholder for photo - replace with actual image */}
+              <span>KB</span>
+            </div>
           </div>
-          <h2 className='about__name'>
-            Kshitij Bhatnagar
-          </h2>
-          <p className='about__role'>
-            Software Engineer
-          </p>
           <div className='about__bio'>
             <p>
               I'm passionate about creating tools that help people understand
@@ -190,25 +146,22 @@ const LandingPage: React.FC = () => {
               and interact with information.
             </p>
           </div>
-          <div className='about__actions'>
-            <a href='mailto:kbhatnagar97@gmail.com' className='about__link--primary'>
-              <FaEnvelope /> Get In Touch
-            </a>
-          </div>
-          <div className='about__socials'>
-            <a href="https://www.linkedin.com/in/kshitij-bhatnagar-18046374/" target="_blank" rel="noopener noreferrer" aria-label="Kshitij Bhatnagar's LinkedIn Profile" className='about__social-link'>
-              <FaLinkedin />
-            </a>
-            <a href="https://github.com/kbhatnagar97" target="_blank" rel="noopener noreferrer" aria-label="Kshitij Bhatnagar's GitHub Profile" className='about__social-link'>
-              <FaGithub />
-            </a>
-            <a href="https://stackoverflow.com/users/20596775/kshitij-bhatnagar" target="_blank" rel="noopener noreferrer" aria-label="Kshitij Bhatnagar's Stack Overflow Profile" className='about__social-link'>
-              <FaStackOverflow />
-            </a>
-            <a href="https://www.instagram.com/kbhatnagar97/" target="_blank" rel="noopener noreferrer" aria-label="Kshitij Bhatnagar's Instagram Profile" className='about__social-link'>
-              <FaInstagram />
-            </a>
-          </div>
+        </div>
+        <div className='about__actions scroll-animate fade-in-up'>
+          <a
+            href='https://github.com/kbhatnagar97'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='about__link'
+          >
+            <FaGithub /> Get in Touch
+          </a>
+          <a
+            href='mailto:kbhatnagar97@gmail.com'
+            className='about__link about__link--secondary'
+          >
+            <FaEnvelope /> Email Me
+          </a>
         </div>
       </section>
     </div>
