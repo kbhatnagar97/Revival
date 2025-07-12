@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useHabits } from './hooks/useHabits';
 import * as FaIcons from 'react-icons/fa';
 import {
@@ -45,7 +45,6 @@ ChartJS.register(
 );
 
 type TimeRange = 'week' | 'month' | 'all';
-type OutletContextType = { isSidebarOpen: boolean };
 
 const getLocalDateString = (date: Date): string => {
   const year = date.getFullYear();
@@ -232,7 +231,6 @@ const HabitDetail = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
 
-  const { isSidebarOpen } = useOutletContext<OutletContextType>();
   const chartRef = useRef<ChartJS<'bar'>>(null);
 
   useEffect(() => {
@@ -243,7 +241,7 @@ const HabitDetail = () => {
       }, 310);
       return () => clearTimeout(timeoutId);
     }
-  }, [isSidebarOpen]);
+  }, []);
 
   const mainHabit = habitId ? getHabitById(habitId) : undefined;
 
@@ -484,6 +482,7 @@ const HabitDetail = () => {
                     onEdit={() => {}}
                     isSortable={false}
                     isEditable={false}
+                    isNavigable={true}
                   />
                 ))
               ) : (
