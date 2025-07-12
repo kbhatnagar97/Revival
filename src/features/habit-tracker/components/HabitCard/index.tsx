@@ -13,6 +13,7 @@ interface HabitCardProps {
   selectedDate: Date;
   isSortable: boolean;
   isEditable?: boolean;
+  isNavigable?: boolean;
 }
 
 const IconComponent = ({ iconName }: { iconName: string }) => {
@@ -40,6 +41,7 @@ const HabitCard: React.FC<HabitCardProps> = ({
   selectedDate,
   isSortable,
   isEditable = true,
+  isNavigable = false,
 }) => {
   const { incrementHabit, decrementHabit } = useHabits();
   const navigate = useNavigate();
@@ -89,7 +91,7 @@ const HabitCard: React.FC<HabitCardProps> = ({
   };
 
   const handleCardClick = () => {
-    if (isSortable) {
+    if (isSortable || isNavigable) {
       navigate(`/habit-tracker/${habit.id}`);
     }
   };
@@ -111,8 +113,8 @@ const HabitCard: React.FC<HabitCardProps> = ({
       <div
         className='card-content'
         onClick={handleCardClick}
-        style={{ cursor: isSortable ? 'pointer' : 'default' }}
-        tabIndex={isSortable ? 0 : -1}
+        style={{ cursor: isSortable || isNavigable ? 'pointer' : 'default' }}
+        tabIndex={isSortable || isNavigable ? 0 : -1}
         onKeyDown={(e) =>
           (e.key === 'Enter' || e.key === ' ') && handleCardClick()
         }

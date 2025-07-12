@@ -21,13 +21,21 @@ const NAME_MAX_LENGTH = 35;
 
 const HabitFormModal: React.FC<HabitFormModalProps> = ({ habitToEdit, onClose }) => {
   const { addHabit, updateHabit, deleteHabit } = useHabits();
-  const [formData, setFormData] = useState({
+  
+  const [formData, setFormData] = useState<{
+    name: string;
+    goal: number | '';
+    icon: string;
+    color: string;
+    days: number[];
+  }>({
     name: habitToEdit?.name || '',
     goal: habitToEdit?.goal || 1,
     icon: habitToEdit?.icon || 'FaStar',
     color: habitToEdit?.color || '#3498db',
     days: habitToEdit?.days || [0, 1, 2, 3, 4, 5, 6],
   });
+  
   const [isClosing, setIsClosing] = useState(false);
 
   const handleClose = () => {
@@ -47,10 +55,19 @@ const HabitFormModal: React.FC<HabitFormModalProps> = ({ habitToEdit, onClose })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name === 'name' && value.length > NAME_MAX_LENGTH) return;
-    const numericValue = ['goal'].includes(name) ? parseInt(value) || 0 : value;
-    setFormData(prev => ({ ...prev, [name]: numericValue }));
+
+    if (name === 'name' && value.length > NAME_MAX_LENGTH) {
+      return;
+    }
+
+    if (name === 'goal') {
+      const newGoal = value === '' ? '' : parseInt(value, 10);
+      setFormData(prev => ({ ...prev, goal: newGoal }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
+
 
   const handleDayToggle = (dayIndex: number) => {
     setFormData(prev => {
@@ -67,7 +84,7 @@ const HabitFormModal: React.FC<HabitFormModalProps> = ({ habitToEdit, onClose })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const { name, goal, icon, color, days } = formData;
+    const { name, goal, icon, color, days } = formData as { name: string; goal: number; icon: string; color: string; days: number[] };
     
     if (habitToEdit) {
       updateHabit(habitToEdit.id, {
@@ -107,7 +124,7 @@ const HabitFormModal: React.FC<HabitFormModalProps> = ({ habitToEdit, onClose })
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="goal">Daily Goal</label>
-                <input type="number" id="goal" name="goal" value={formData.goal} onChange={handleChange} required min="1" />
+                <input type="number" id="goal" name="goal" value={formData.goal} onChange={handleChange} required min="1" placeholder="e.g., 8"/>
               </div>
             </div>
             <div className="form-group">

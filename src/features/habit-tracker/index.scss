@@ -1,0 +1,32 @@
+.habit-tracker-page {
+  min-height: 100vh;
+  background-color: #fbfaf8;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-x: hidden;
+
+  @media (max-width: 1023px) {
+    min-height: auto;
+  }
+}
+
+.habit-tracker-content {
+  flex: 1;
+  padding: 2rem;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 1rem;
+  }
+
+  @media (max-width: 320px) {
+    padding: 0.5rem;
+  }
+}
