@@ -1,9 +1,9 @@
 :root {
   --bg-cream: #fbfaf8;
   --bg-cream-darker: #f5f2ef;
-  --text-dark-brown: #3a241d; 
+  --text-dark-brown: #3a241d;
   --text-mid-brown: #6b4423;
-  --accent-gold: #d79f2b; 
+  --accent-gold: #d79f2b;
   --accent-gold-darker: #c08e25;
   --shadow-color: rgba(91, 62, 45, 0.15);
 
@@ -74,7 +74,8 @@ body {
 }
 
 @keyframes floatMove1 {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px) translateX(0px) rotate(0deg);
   }
   25% {
@@ -89,7 +90,8 @@ body {
 }
 
 @keyframes floatMove2 {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px) translateX(0px) rotate(360deg);
   }
   33% {
@@ -101,7 +103,8 @@ body {
 }
 
 @keyframes floatMove3 {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px) translateX(0px) rotate(0deg);
   }
   30% {
@@ -128,17 +131,23 @@ body {
 
   &.slide-in-left {
     transform: translateX(-50px) translateY(50px);
-    &.animate-in { transform: translateX(0) translateY(0); }
+    &.animate-in {
+      transform: translateX(0) translateY(0);
+    }
   }
 
   &.slide-in-right {
     transform: translateX(50px) translateY(50px);
-    &.animate-in { transform: translateX(0) translateY(0); }
+    &.animate-in {
+      transform: translateX(0) translateY(0);
+    }
   }
 
   &.fade-in-up {
     transform: translateY(30px);
-    &.animate-in { transform: translateY(0); }
+    &.animate-in {
+      transform: translateY(0);
+    }
   }
 }
 
@@ -222,7 +231,11 @@ body {
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
     transform: translateX(-50%) translateY(0);
   }
   40% {
@@ -235,10 +248,18 @@ body {
 
 .projects-section {
   padding: 6rem 2rem;
-  background: linear-gradient(135deg, var(--bg-cream) 0%, var(--bg-cream-darker) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--bg-cream) 0%,
+    var(--bg-cream-darker) 100%
+  );
 
-  @media (max-width: 768px) { padding: 4rem 1rem; }
-  @media (max-width: 480px) { padding: 3rem 0.75rem; }
+  @media (max-width: 768px) {
+    padding: 4rem 1rem;
+  }
+  @media (max-width: 480px) {
+    padding: 3rem 0.75rem;
+  }
 }
 
 .section-header {
@@ -246,8 +267,12 @@ body {
   max-width: 800px;
   margin: 0 auto 6rem auto;
 
-  @media (max-width: 768px) { margin: 0 auto 4rem auto; }
-  @media (max-width: 480px) { margin: 0 auto 3rem auto; }
+  @media (max-width: 768px) {
+    margin: 0 auto 4rem auto;
+  }
+  @media (max-width: 480px) {
+    margin: 0 auto 3rem auto;
+  }
 }
 
 .section-title {
@@ -280,13 +305,21 @@ body {
     gap: 3rem;
     padding: 4rem 0;
   }
-  @media (max-width: 768px) { padding: 3rem 0; gap: 2rem; }
-  @media (max-width: 480px) { padding: 2rem 0; gap: 1.5rem; }
+  @media (max-width: 768px) {
+    padding: 3rem 0;
+    gap: 2rem;
+  }
+  @media (max-width: 480px) {
+    padding: 2rem 0;
+    gap: 1.5rem;
+  }
 
   &__text {
     text-align: left;
     width: 100%;
-    @media (max-width: 1024px) { text-align: center; }
+    @media (max-width: 1024px) {
+      text-align: center;
+    }
   }
 
   &__title {
@@ -306,17 +339,26 @@ body {
     word-wrap: break-word;
     hyphens: auto;
 
-    @media (max-width: 768px) { font-size: 1.1rem; }
-    @media (max-width: 480px) { font-size: 1rem; }
+    @media (max-width: 768px) {
+      font-size: 1.1rem;
+    }
+    @media (max-width: 480px) {
+      font-size: 1rem;
+    }
   }
 
   &__actions {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
-    
-    @media (max-width: 1024px) { justify-content: center; }
-    @media (max-width: 480px) { flex-direction: column; align-items: center; }
+
+    @media (max-width: 1024px) {
+      justify-content: center;
+    }
+    @media (max-width: 480px) {
+      flex-direction: column;
+      align-items: center;
+    }
   }
 
   &__cta {
@@ -328,11 +370,11 @@ body {
     border-radius: 50px;
     font-weight: 600;
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    
+
     &--primary {
       background: var(--text-dark-brown);
       color: var(--bg-cream);
-      
+
       &:hover {
         transform: translateY(-2px);
         background: var(--text-mid-brown);
@@ -344,7 +386,7 @@ body {
       background: transparent;
       color: var(--text-mid-brown);
       border: 2px solid var(--text-mid-brown);
-      
+
       &:hover {
         background: var(--text-mid-brown);
         color: var(--bg-cream);
@@ -357,7 +399,9 @@ body {
     width: 100%;
     max-width: 600px;
     justify-self: center;
-    @media (max-width: 1024px) { max-width: 800px; }
+    @media (max-width: 1024px) {
+      max-width: 800px;
+    }
   }
 
   &__demo {
@@ -366,7 +410,7 @@ body {
     background: white;
     box-shadow: 0 30px 60px -10px var(--shadow-color);
     transition: transform 0.3s ease;
-    
+
     &:hover {
       transform: translateY(-5px);
     }
@@ -375,11 +419,15 @@ body {
   &--gaussian {
     .project-showcase__text {
       order: 2;
-      @media (max-width: 1024px) { order: unset; }
+      @media (max-width: 1024px) {
+        order: unset;
+      }
     }
     .project-showcase__visual {
       order: 1;
-      @media (max-width: 1024px) { order: unset; }
+      @media (max-width: 1024px) {
+        order: unset;
+      }
     }
   }
 
@@ -400,8 +448,10 @@ body {
   gap: 0.5rem;
   margin-bottom: 1rem;
   flex-wrap: wrap;
-  
-  @media (max-width: 1024px) { justify-content: center; }
+
+  @media (max-width: 1024px) {
+    justify-content: center;
+  }
 }
 
 .tech-tag {
@@ -423,8 +473,12 @@ body {
   align-items: center;
   min-height: 100vh; // Give it space to breathe
 
-  @media (max-width: 768px) { padding: 8rem 1rem; }
-  @media (max-width: 480px) { padding: 6rem 0.75rem; }
+  @media (max-width: 768px) {
+    padding: 8rem 1rem;
+  }
+  @media (max-width: 480px) {
+    padding: 6rem 0.75rem;
+  }
 
   // This is the "frosted glass" card that holds all the content.
   &__inner {
@@ -434,23 +488,32 @@ body {
     padding: 4rem;
     text-align: center;
     border-radius: 30px;
-    
+
     // The Glassmorphism Effect
-    background: rgba(251, 250, 248, 0.65); // Semi-transparent version of your bg
+    background: rgba(
+      251,
+      250,
+      248,
+      0.65
+    ); // Semi-transparent version of your bg
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px); // For Safari
     border: 1.5px solid rgba(255, 255, 255, 0.8);
     box-shadow: 0 25px 50px -12px var(--shadow-color);
 
-    @media (max-width: 768px) { padding: 3rem; }
-    @media (max-width: 480px) { padding: 2rem 1.5rem; }
+    @media (max-width: 768px) {
+      padding: 3rem;
+    }
+    @media (max-width: 480px) {
+      padding: 2rem 1.5rem;
+    }
   }
 
   &__avatar {
     width: 130px;
     height: 130px;
     margin: 0 auto 1.5rem auto;
-    
+
     @media (max-width: 480px) {
       width: 110px;
       height: 110px;
@@ -480,7 +543,7 @@ body {
     margin: 0 auto 2.5rem auto;
     font-weight: 500;
   }
-  
+
   // The 'About Me' text
   &__bio {
     font-size: 1.2rem;
@@ -488,18 +551,25 @@ body {
     color: var(--text-mid-brown);
     max-width: 600px;
     margin: 0 auto 3rem auto;
-    
-    @media (max-width: 768px) { font-size: 1.1rem; }
-    @media (max-width: 480px) { font-size: 1rem; line-height: 1.7; }
+
+    @media (max-width: 768px) {
+      font-size: 1.1rem;
+    }
+    @media (max-width: 480px) {
+      font-size: 1rem;
+      line-height: 1.7;
+    }
 
     p {
       margin-bottom: 1.25rem;
-      &:last-child { margin-bottom: 0; }
+      &:last-child {
+        margin-bottom: 0;
+      }
     }
   }
 
   &__actions {
-    margin-bottom: 2.5rem; 
+    margin-bottom: 2.5rem;
   }
 
   &__link--primary {
@@ -507,7 +577,7 @@ body {
     align-items: center;
     gap: 0.75rem;
     background: var(--accent-gold);
-    color: white; 
+    color: white;
     text-decoration: none;
     padding: 1rem 2.5rem;
     border-radius: 50px;
@@ -527,20 +597,22 @@ body {
     display: flex;
     justify-content: center;
     gap: 2rem;
-    
-    @media (max-width: 480px) { gap: 1.5rem; }
+
+    @media (max-width: 480px) {
+      gap: 1.5rem;
+    }
   }
 
   &__social-link {
     color: var(--text-mid-brown);
-    font-size: 1.6rem; 
+    font-size: 1.6rem;
     opacity: 0.7;
     transition: all 0.3s ease;
 
     &:hover {
       opacity: 1;
       color: var(--text-dark-brown);
-      transform: scale(1.15); 
+      transform: scale(1.15);
     }
   }
 }

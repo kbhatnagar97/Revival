@@ -14,7 +14,7 @@ Explore the deployed projects here:
 
 ### 1. 🎯 Habit Tracker
 
-![Habit Tracker Demo](src/common/assets/images/habit-tracker.gif)
+![Habit Tracker Demo](public/images/habit-tracker.gif)
 
 The Habit Tracker is a comprehensive tool designed to help users build, track, and analyze their daily habits with advanced analytics and a beautiful, responsive interface.
 
@@ -60,7 +60,7 @@ The Habit Tracker is a comprehensive tool designed to help users build, track, a
 
 ### 2. 📊 Gaussian Visualizer
 
-![Gaussian Visualizer Demo](src/common/assets/images/gaussian-tracker.gif)
+![Gaussian Visualizer Demo](public/images/gaussian-tracker.gif)
 
 The Gaussian Visualizer is an interactive educational tool for exploring normal (Gaussian) distributions and process capability metrics, ideal for students, engineers, and data enthusiasts.
 
