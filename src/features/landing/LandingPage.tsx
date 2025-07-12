@@ -7,10 +7,8 @@ const LandingPage: React.FC = () => {
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
-    // Smooth scrolling behavior
     document.documentElement.style.scrollBehavior = 'smooth';
 
-    // Create intersection observer for scroll animations
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -25,7 +23,6 @@ const LandingPage: React.FC = () => {
       }
     );
 
-    // Observe all animatable elements
     const animatedElements = document.querySelectorAll('.scroll-animate');
     animatedElements.forEach((el) => {
       observerRef.current?.observe(el);
@@ -38,15 +35,12 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className='landing-page'>
-      {/* --- Animated Background --- */}
-      {/* This element is now more important with the frosted glass effect */}
       <div className='background-animations'>
         <div className='shape shape-1'></div>
         <div className='shape shape-2'></div>
         <div className='shape shape-3'></div>
       </div>
 
-      {/* Hero Section with Enhanced Interactivity */}
       <section className='hero'>
         <div className='hero__content'>
           <h1 className='hero__title scroll-animate fade-in-up'>
@@ -110,7 +104,7 @@ const LandingPage: React.FC = () => {
         <div className='project-showcase__visual scroll-animate slide-in-right'>
           <div className='project-showcase__demo'>
             <img
-              src='/src/common/assets/images/habit-tracker.gif'
+              src='/images/habit-tracker.gif'
               alt='Habit Tracker Demo'
               className='project-showcase__gif'
             />
@@ -123,7 +117,7 @@ const LandingPage: React.FC = () => {
         <div className='project-showcase__visual scroll-animate slide-in-left'>
           <div className='project-showcase__demo'>
             <img
-              src='/src/common/assets/images/gaussian-tracker.gif'
+              src='/images/gaussian-tracker.gif'
               alt='Gaussian Visualizer Demo'
               className='project-showcase__gif'
             />
@@ -169,7 +163,7 @@ const LandingPage: React.FC = () => {
       <section className='about'>
         <div className='about__inner scroll-animate fade-in-up'>
           <div className='about__avatar'>
-            <img src="/src/common/assets/images/Profile.JPG" alt="Kshitij Bhatnagar" />
+            <img src="/images/Profile.JPG" alt="Kshitij Bhatnagar" />
           </div>
           <h2 className='about__name'>
             Kshitij Bhatnagar

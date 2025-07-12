@@ -1,15 +1,12 @@
-/* --- Design System: "Apple Inspired" Theme --- */
 :root {
-  // Your original palette, slightly refined for harmony
   --bg-cream: #fbfaf8;
   --bg-cream-darker: #f5f2ef;
-  --text-dark-brown: #3a241d; // Slightly deeper brown for better contrast
+  --text-dark-brown: #3a241d; 
   --text-mid-brown: #6b4423;
-  --accent-gold: #d79f2b; // A slightly richer, less saturated gold
+  --accent-gold: #d79f2b; 
   --accent-gold-darker: #c08e25;
   --shadow-color: rgba(91, 62, 45, 0.15);
 
-  // Apple-like typography
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     sans-serif;
 }
@@ -30,7 +27,6 @@ body {
   word-wrap: break-word;
 }
 
-/* --- Enhanced Background Animations --- */
 .background-animations {
   position: fixed;
   top: 0;
@@ -119,7 +115,6 @@ body {
   }
 }
 
-/* --- General Content Animations --- */
 .scroll-animate {
   opacity: 0;
   transform: translateY(50px);
@@ -147,7 +142,6 @@ body {
   }
 }
 
-/* --- Hero Section: Enhanced & Interactive --- */
 .hero {
   display: flex;
   flex-direction: column;
@@ -239,7 +233,6 @@ body {
   }
 }
 
-/* --- Projects Section: Enhanced Layout --- */
 .projects-section {
   padding: 6rem 2rem;
   background: linear-gradient(135deg, var(--bg-cream) 0%, var(--bg-cream-darker) 100%);
@@ -272,7 +265,6 @@ body {
   margin: 0;
 }
 
-/* --- Project Showcase: Enhanced with Technology Badges --- */
 .project-showcase {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -506,18 +498,16 @@ body {
     }
   }
 
-  // Container for the primary CTA button
   &__actions {
-    margin-bottom: 2.5rem; // More space before social links
+    margin-bottom: 2.5rem; 
   }
 
-  // The primary button style
   &__link--primary {
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
     background: var(--accent-gold);
-    color: white; // White provides better contrast on gold
+    color: white; 
     text-decoration: none;
     padding: 1rem 2.5rem;
     border-radius: 50px;
@@ -533,7 +523,6 @@ body {
     }
   }
 
-  // Container for the icon-based social links
   &__socials {
     display: flex;
     justify-content: center;
@@ -542,17 +531,16 @@ body {
     @media (max-width: 480px) { gap: 1.5rem; }
   }
 
-  // Subtle, icon-only links for social profiles
   &__social-link {
     color: var(--text-mid-brown);
-    font-size: 1.6rem; // Larger icons for a cleaner look
+    font-size: 1.6rem; 
     opacity: 0.7;
     transition: all 0.3s ease;
 
     &:hover {
       opacity: 1;
       color: var(--text-dark-brown);
-      transform: scale(1.15); // More pronounced hover effect
+      transform: scale(1.15); 
     }
   }
 }
