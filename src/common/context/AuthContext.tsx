@@ -1,10 +1,11 @@
 import React, {
   createContext,
-  useContext,
   useState,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from 'react';
+import { authService } from '../../services/authService';
+import type { User as FirebaseUser } from 'firebase/auth';
 
 interface User {
   id: string;
@@ -30,12 +31,22 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+// Export the context for use in useAuth hook
+export { AuthContext };
+
+// Helper function to convert Firebase user to our User type
+const convertFirebaseUser = (firebaseUser: FirebaseUser): User => {
+  return {
+    id: firebaseUser.uid,
+    email: firebaseUser.email || '',
+    name:
+      firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+    picture: firebaseUser.photoURL || undefined,
+    provider:
+      firebaseUser.providerData[0]?.providerId === 'google.com'
+        ? 'google'
+        : 'email',
+  };
 };
 
 interface AuthProviderProps {
@@ -47,64 +58,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session on mount
-    const checkAuthState = async () => {
-      try {
-        const savedUser = localStorage.getItem('revival_user');
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-        }
-      } catch (error) {
-        console.error('Error checking auth state:', error);
-      } finally {
-        setIsLoading(false);
+    // Listen to auth state changes
+    const unsubscribe = authService.onAuthStateChanged((firebaseUser) => {
+      if (firebaseUser) {
+        const convertedUser = convertFirebaseUser(firebaseUser);
+        setUser(convertedUser);
+      } else {
+        setUser(null);
       }
-    };
+      setIsLoading(false);
+    });
 
-    checkAuthState();
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
   const signInWithGoogle = async () => {
     setIsLoading(true);
     try {
-      // Mock Google sign-in for now
-      // In a real app, you'd integrate with Google OAuth
-      const mockUser: User = {
-        id: '1',
-        email: 'user@gmail.com',
-        name: 'Google User',
-        picture: 'https://via.placeholder.com/40',
-        provider: 'google',
-      };
-
-      setUser(mockUser);
-      localStorage.setItem('revival_user', JSON.stringify(mockUser));
+      await authService.signInWithGoogle();
+      // User state will be updated by onAuthStateChanged
     } catch (error) {
       console.error('Google sign-in error:', error);
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   };
 
   const signInWithEmail = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock email sign-in
-      const mockUser: User = {
-        id: '2',
-        email,
-        name: email.split('@')[0],
-        provider: 'email',
-      };
-
-      setUser(mockUser);
-      localStorage.setItem('revival_user', JSON.stringify(mockUser));
+      await authService.signInWithEmail(email, password);
+      // User state will be updated by onAuthStateChanged
     } catch (error) {
       console.error('Email sign-in error:', error);
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   };
 
@@ -115,28 +104,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ) => {
     setIsLoading(true);
     try {
-      // Mock email sign-up
-      const mockUser: User = {
-        id: '3',
-        email,
-        name,
-        provider: 'email',
-      };
-
-      setUser(mockUser);
-      localStorage.setItem('revival_user', JSON.stringify(mockUser));
+      await authService.signUpWithEmail(email, password, name);
+      // User state will be updated by onAuthStateChanged
     } catch (error) {
       console.error('Email sign-up error:', error);
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   };
 
   const signOut = async () => {
     try {
-      setUser(null);
-      localStorage.removeItem('revival_user');
+      await authService.signOut();
+      // User state will be updated by onAuthStateChanged
     } catch (error) {
       console.error('Sign-out error:', error);
       throw error;
@@ -145,8 +125,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const resetPassword = async (email: string) => {
     try {
-      // Mock password reset
-      console.log('Password reset email sent to:', email);
+      await authService.resetPassword(email);
     } catch (error) {
       console.error('Password reset error:', error);
       throw error;

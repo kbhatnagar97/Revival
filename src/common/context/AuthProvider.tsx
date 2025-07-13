@@ -1,91 +1,124 @@
-import React, { useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import { AuthContext } from './auth-context';
-import type { User, AuthContextType } from './auth-context';
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from 'react';
+import { authService } from '../../services/authService';
+import type { User as FirebaseUser } from 'firebase/auth';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  picture?: string;
+  provider: 'google' | 'email';
+}
+
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (
+    email: string,
+    password: string,
+    name: string
+  ) => Promise<void>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Export the context for use in useAuth hook
+export { AuthContext };
+
+// Helper function to convert Firebase user to our User type
+const convertFirebaseUser = (firebaseUser: FirebaseUser): User => {
+  // Extract and format name from email if displayName is not available
+  const getNameFromEmail = (email: string): string => {
+    const username = email.split('@')[0];
+    // Replace dots, underscores, and hyphens with spaces, then capitalize each word
+    return username
+      .replace(/[._-]/g, ' ')
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  };
+
+  return {
+    id: firebaseUser.uid,
+    email: firebaseUser.email || '',
+    name:
+      firebaseUser.displayName ||
+      (firebaseUser.email ? getNameFromEmail(firebaseUser.email) : 'User'),
+    picture: firebaseUser.photoURL || undefined,
+    provider:
+      firebaseUser.providerData[0]?.providerId === 'google.com'
+        ? 'google'
+        : 'email',
+  };
+};
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session on mount
-    const checkAuthState = async () => {
-      try {
-        const savedUser = localStorage.getItem('revival_user');
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
+    // Listen to auth state changes
+    const unsubscribe = authService.onAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        // If displayName is missing on a new user, wait a moment and reload
+        if (
+          !firebaseUser.displayName &&
+          firebaseUser.metadata.creationTime ===
+            firebaseUser.metadata.lastSignInTime
+        ) {
+          try {
+            // Small delay to allow profile update to complete
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            await firebaseUser.reload();
+          } catch (error) {
+            console.log('Error reloading user:', error);
+          }
         }
-      } catch (error) {
-        console.error('Error checking auth state:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    checkAuthState();
+        const convertedUser = convertFirebaseUser(firebaseUser);
+        setUser(convertedUser);
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
   const signInWithGoogle = async () => {
     setIsLoading(true);
     try {
-      // Mock Google sign-in for now
-      // In a real app, you'd integrate with Google OAuth
-      const mockUser: User = {
-        id: '1',
-        email: 'john.doe@gmail.com',
-        name: 'John Doe',
-        picture:
-          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format&q=80',
-        provider: 'google',
-      };
-
-      setUser(mockUser);
-      localStorage.setItem('revival_user', JSON.stringify(mockUser));
+      await authService.signInWithGoogle();
+      // User state will be updated by onAuthStateChanged
     } catch (error) {
       console.error('Google sign-in error:', error);
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   };
 
   const signInWithEmail = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock email sign-in
-      // In a real app, you'd validate the password
-      console.log(
-        'Signing in with password for:',
-        email,
-        password ? 'provided' : 'missing'
-      );
-
-      const mockUser: User = {
-        id: '2',
-        email,
-        name: email
-          .split('@')[0]
-          .replace(/[._]/g, ' ')
-          .replace(/\b\w/g, (l) => l.toUpperCase()),
-        // Sometimes no picture to test initials
-        picture:
-          Math.random() > 0.5
-            ? `https://images.unsplash.com/photo-1494790108755-2616b2a2c9e9?w=150&h=150&fit=crop&crop=face&auto=format&q=80`
-            : undefined,
-        provider: 'email',
-      };
-
-      setUser(mockUser);
-      localStorage.setItem('revival_user', JSON.stringify(mockUser));
+      await authService.signInWithEmail(email, password);
+      // User state will be updated by onAuthStateChanged
     } catch (error) {
       console.error('Email sign-in error:', error);
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   };
 
@@ -96,39 +129,22 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ) => {
     setIsLoading(true);
     try {
-      // Mock email sign-up
-      console.log(
-        'Signing up with password for:',
-        email,
-        password ? 'provided' : 'missing'
-      );
-
-      const mockUser: User = {
-        id: '3',
-        email,
-        name,
-        // Sometimes no picture to test initials
-        picture:
-          Math.random() > 0.3
-            ? `https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face&auto=format&q=80`
-            : undefined,
-        provider: 'email',
-      };
-
-      setUser(mockUser);
-      localStorage.setItem('revival_user', JSON.stringify(mockUser));
+      const user = await authService.signUpWithEmail(email, password, name);
+      // Manually update the user state with the correct name to ensure immediate update
+      const convertedUser = convertFirebaseUser(user);
+      setUser(convertedUser);
+      setIsLoading(false);
     } catch (error) {
       console.error('Email sign-up error:', error);
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   };
 
   const signOut = async () => {
     try {
-      setUser(null);
-      localStorage.removeItem('revival_user');
+      await authService.signOut();
+      // User state will be updated by onAuthStateChanged
     } catch (error) {
       console.error('Sign-out error:', error);
       throw error;
@@ -137,8 +153,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const resetPassword = async (email: string) => {
     try {
-      // Mock password reset
-      console.log('Password reset email sent to:', email);
+      await authService.resetPassword(email);
     } catch (error) {
       console.error('Password reset error:', error);
       throw error;
@@ -157,5 +172,3 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-export default AuthProvider;

@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import HabitTrackerFeature from './features/habit-tracker';
 import GaussianVisualizerPage from './features/gaussian-visualizer';
 import LandingPage from './features/landing/LandingPage';
-import AuthProvider from './common/context/AuthProvider';
+import { AuthProvider } from './common/context/AuthProvider';
 import ProtectedRoute from './common/components/ProtectedRoute';
 
 function App() {

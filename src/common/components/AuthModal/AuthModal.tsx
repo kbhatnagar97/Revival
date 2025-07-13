@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FaTimes, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { useAuth } from '../../context/auth-context';
+import { useAuth } from '../../hooks/useAuth';
 import './AuthModal.scss';
 
 // Custom colorful Google icon component

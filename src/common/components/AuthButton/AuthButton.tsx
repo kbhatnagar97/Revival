@@ -8,7 +8,7 @@ import {
   FaHome,
 } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/auth-context';
+import { useAuth } from '../../hooks/useAuth';
 import './AuthButton.scss';
 
 interface AuthButtonProps {

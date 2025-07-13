@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../common/context/auth-context';
+import { useAuth } from '../../common/hooks/useAuth';
 import HabitDashboard from './HabitDashboard';
 import HabitDetail from './HabitDetail';
 import SimpleHeader from '../../common/components/SimpleHeader/SimpleHeader';
