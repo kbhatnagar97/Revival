@@ -1,10 +1,10 @@
 // ==========================================================================
-// Design System: The New Corporate Theme
+// Design System Variables
 // ==========================================================================
 :root {
-  // Your provided theme colors
-  --auth-color-primary: #c59247;
-  --auth-color-primary-hover: #a57731;
+  // Updated gold color scheme matching landing page
+  --auth-color-primary: #d79f2b;
+  --auth-color-primary-hover: #c08e25;
   --auth-color-text-heading: #3a2b25;
   --auth-color-text-body: #6b574d;
   --auth-color-text-subtle: #8a7a73;
@@ -15,12 +15,12 @@
   --auth-color-border-hover: #e1ddd7;
   --auth-color-border-focus: var(--auth-color-primary);
 
-  // ✅ NEW: Custom additions for states based on your theme
+  // Error states
   --auth-color-error-text: #b91c1c;
   --auth-color-error-text-hover: #991b1b;
-  --auth-color-error-bg: #fef2f2; // A soft red background for hover
+  --auth-color-error-bg: #fef2f2;
 
-  // ✅ NEW: Shadows are now tinted with the theme's dark color for warmth
+  // Shadows
   --auth-shadow-sm: 0 1px 2px rgba(58, 43, 37, 0.05);
   --auth-shadow-md: 0 4px 6px -1px rgba(58, 43, 37, 0.08),
     0 2px 4px -1px rgba(58, 43, 37, 0.05);
@@ -29,7 +29,7 @@
   --auth-shadow-xl: 0 20px 25px -5px rgba(58, 43, 37, 0.1),
     0 10px 10px -5px rgba(58, 43, 37, 0.04);
 
-  // Transitions for smooth animations
+  // Transitions
   --auth-transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --auth-transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -43,8 +43,8 @@
   justify-content: center;
   gap: 0.65rem;
   padding: 0.75rem 1.5rem;
-  border: 1px solid transparent; // Consistent sizing
-  border-radius: 2rem; // Modern pill shape
+  border: 1px solid transparent;
+  border-radius: 2rem;
   font-size: 0.875rem;
   font-weight: 600;
   font-family: inherit;
@@ -57,7 +57,6 @@
   color: var(--auth-color-text-inverted);
   box-shadow: var(--auth-shadow-md);
 
-  // ✅ NEW: Satisfying hover "lift" effect
   &:hover {
     background-color: var(--auth-color-primary-hover);
     transform: translateY(-2px);
@@ -73,7 +72,13 @@
     font-size: 1rem;
   }
 
-  // Profile button variant - subtle and classy
+  &__text {
+    &--sign-in {
+      display: block;
+    }
+  }
+
+  // Profile button variant
   &--profile {
     background-color: transparent;
     color: var(--auth-color-text-body);
@@ -95,7 +100,6 @@
       box-shadow: inset 0 2px 4px rgba(58, 43, 37, 0.15);
       transform: translateY(1px) scale(0.98);
 
-      // Keep chevron visible in active state
       .auth-button__chevron {
         color: var(--auth-color-primary);
       }
@@ -323,11 +327,10 @@
 
   // Mobile dropdown improvements
   .auth-dropdown {
-    width: auto;
-    left: 0.25rem;
-    right: 0.25rem;
-    max-width: none;
-    margin: 0 auto;
+    width: 300px;
+    right: 0;
+    left: auto;
+    max-width: calc(100vw - 1rem);
 
     // Better positioning for small screens
     top: calc(100% + 0.5rem);
@@ -374,8 +377,10 @@
   }
 
   .auth-dropdown {
-    left: 0.25rem;
-    right: 0.25rem;
+    width: 240px;
+    right: 0;
+    left: auto;
+    max-width: calc(100vw - 1rem);
 
     &__header {
       padding: 0.625rem;
