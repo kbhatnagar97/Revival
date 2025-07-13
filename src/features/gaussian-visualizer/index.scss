@@ -79,16 +79,28 @@ $border-color: #eae6e1;
 
   // Desktop layout: Initial Settings, Controls (middle), Metrics
   @media (min-width: 1201px) {
-    .gv-panel--initial-settings { order: 1; }
-    .gv-panel--controls { order: 2; }
-    .gv-panel--metrics { order: 3; }
+    .gv-panel--initial-settings {
+      order: 1;
+    }
+    .gv-panel--controls {
+      order: 2;
+    }
+    .gv-panel--metrics {
+      order: 3;
+    }
   }
 
-  // Mobile layout: Controls (top), Initial Settings, Metrics  
+  // Mobile layout: Controls (top), Initial Settings, Metrics
   @media (max-width: 1200px) {
-    .gv-panel--controls { order: 1; }
-    .gv-panel--initial-settings { order: 2; }
-    .gv-panel--metrics { order: 3; }
+    .gv-panel--controls {
+      order: 1;
+    }
+    .gv-panel--initial-settings {
+      order: 2;
+    }
+    .gv-panel--metrics {
+      order: 3;
+    }
   }
 }
 
@@ -290,12 +302,12 @@ $border-color: #eae6e1;
   font-weight: 500;
   max-width: 100%;
   box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   @media (max-width: 480px) {
     font-size: 0.9rem;
     padding: 0.5rem 0.6rem;
   }
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   &:focus {
     outline: none;

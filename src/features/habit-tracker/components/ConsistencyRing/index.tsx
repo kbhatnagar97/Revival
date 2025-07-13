@@ -12,6 +12,7 @@ const ConsistencyRing: React.FC<ConsistencyRingProps> = ({
   color,
   lightenedColor,
 }) => {
+  // Use the original larger sizing for better visual impact
   const { svg: svgSize, stroke: strokeWidth } = { svg: 220, stroke: 32 };
   const radius = (svgSize - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
@@ -20,15 +21,13 @@ const ConsistencyRing: React.FC<ConsistencyRingProps> = ({
 
   const progressOffset = circumference * (1 - clampedPercentage / 100);
 
-  const gradientId = `consistencyGradient-${color.replace('#', '')}-${'large'}`;
+  const gradientId = `consistencyGradient-${color.replace('#', '')}-large`;
 
   return (
-    <div
-      className={`consistency-ring-container consistency-ring-container--${'large'}`}
-    >
+    <div className='consistency-ring-container consistency-ring-container--large'>
       <svg
-        width={svgSize}
-        height={svgSize}
+        width='100%'
+        height='100%'
         viewBox={`0 0 ${svgSize} ${svgSize}`}
         className='consistency-ring'
       >
