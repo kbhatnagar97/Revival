@@ -50,6 +50,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState('');
   const [isClosing, setIsClosing] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
 
   const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword } =
     useAuth();
@@ -109,8 +110,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         handleClose();
       } else if (mode === 'reset') {
         await resetPassword(email);
-        setSuccessMessage('Password reset email sent! Check your inbox.');
-        setTimeout(() => setMode('signin'), 3000);
+        setSuccessMessage(
+          'Password reset email sent! Please check your inbox and spam folder.'
+        );
+        // Trigger success animation
+        setShowSuccessAnimation(true);
+        setTimeout(() => setShowSuccessAnimation(false), 2000);
       }
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
@@ -167,7 +172,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       aria-modal='true'
     >
       <div
-        className={`auth-modal ${isClosing ? 'auth-modal--closing' : ''}`}
+        className={`auth-modal ${isClosing ? 'auth-modal--closing' : ''} ${
+          showSuccessAnimation ? 'auth-modal--success' : ''
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <button

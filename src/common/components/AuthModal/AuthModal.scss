@@ -14,6 +14,9 @@
   --auth-color-error-bg: #fbeae9;
   --auth-color-error-text: #c0392b;
   --auth-color-error-border: #f1b0a9;
+  --auth-color-success-bg: #e8f5e8;
+  --auth-color-success-text: #2d5016;
+  --auth-color-success-border: #a3d977;
   --auth-color-google-icon: #ea4335;
 
   // Typography
@@ -264,6 +267,18 @@
   line-height: 1.4;
 }
 
+.auth-modal__success {
+  padding: var(--auth-spacing-md);
+  background: var(--auth-color-success-bg);
+  border: 1px solid var(--auth-color-success-border);
+  border-radius: var(--auth-border-radius-sm);
+  color: var(--auth-color-success-text);
+  font-size: var(--auth-fs-small);
+  font-weight: var(--auth-fw-semibold);
+  text-align: center;
+  line-height: 1.4;
+}
+
 .auth-modal__btn {
   width: 100%;
   padding: 1rem var(--auth-spacing-lg);
@@ -377,7 +392,8 @@
     line-height: 1.5;
   }
 
-  button {
+  button, 
+  a {
     background: none;
     border: none;
     padding: 0;
