@@ -24,6 +24,11 @@
   text-align: left;
 }
 
+.simple-header__nav {
+  display: flex;
+  align-items: center;
+}
+
 .simple-header__galaxy-nav {
   display: flex;
   align-items: center;

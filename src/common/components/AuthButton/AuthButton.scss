@@ -119,6 +119,16 @@
     object-fit: cover;
     border: 2px solid transparent;
     transition: border-color var(--auth-transition-fast);
+
+    // Styles for placeholder avatar div
+    &:not(img) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--auth-color-background);
+      color: var(--auth-color-text-subtle);
+      font-size: 0.875rem;
+    }
   }
 
   &__chevron {
@@ -316,6 +326,11 @@
       .auth-button__avatar {
         width: 24px;
         height: 24px;
+
+        // Ensure placeholder avatar styling is consistent on mobile
+        &:not(img) {
+          font-size: 0.75rem;
+        }
       }
 
       .auth-button__chevron {

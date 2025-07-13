@@ -5,8 +5,9 @@ import {
   FaSignOutAlt,
   FaChartLine,
   FaCalculator,
+  FaHome,
 } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/auth-context';
 import './AuthButton.scss';
 
@@ -19,6 +20,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({ onClick }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -108,13 +110,23 @@ const AuthButton: React.FC<AuthButtonProps> = ({ onClick }) => {
         </div>
 
         <div className='auth-dropdown__menu'>
-          <button
-            className='auth-dropdown__item'
-            onClick={() => handleNavigation('/habit-tracker')}
-          >
-            <FaChartLine className='auth-dropdown__item-icon' />
-            <span>Habit Tracker</span>
-          </button>
+          {location.pathname.startsWith('/habit-tracker') ? (
+            <button
+              className='auth-dropdown__item'
+              onClick={() => handleNavigation('/')}
+            >
+              <FaHome className='auth-dropdown__item-icon' />
+              <span>Home Page</span>
+            </button>
+          ) : (
+            <button
+              className='auth-dropdown__item'
+              onClick={() => handleNavigation('/habit-tracker')}
+            >
+              <FaChartLine className='auth-dropdown__item-icon' />
+              <span>Habit Tracker</span>
+            </button>
+          )}
 
           <button
             className='auth-dropdown__item'

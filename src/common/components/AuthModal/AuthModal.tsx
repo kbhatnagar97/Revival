@@ -216,7 +216,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  placeholder='Jane Doe'
+                  placeholder='John Doe'
                   disabled={isLoading}
                 />
               </div>
@@ -230,7 +230,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder='jane.doe@example.com'
+                placeholder='john.doe@example.com'
                 disabled={isLoading}
               />
             </div>

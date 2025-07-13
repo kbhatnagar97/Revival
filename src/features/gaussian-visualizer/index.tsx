@@ -239,10 +239,13 @@ const GaussianVisualizerPage: React.FC = () => {
 
   const handleApplyInitialSettings = () => {
     const newInitialMean = parseFloat(initialMeanInput) || INITIAL_MEAN;
-    const newInitialStdev = Math.max(0.1, parseFloat(initialStdevInput) || INITIAL_STDEV);
+    const newInitialStdev = Math.max(
+      0.1,
+      parseFloat(initialStdevInput) || INITIAL_STDEV
+    );
     let newInitialLsl = parseFloat(initialLslInput) || INITIAL_LSL;
     let newInitialUsl = parseFloat(initialUslInput) || INITIAL_USL;
-    
+
     // Validate that LSL < USL
     if (newInitialLsl >= newInitialUsl) {
       // If LSL >= USL, reset to current valid values
@@ -250,7 +253,9 @@ const GaussianVisualizerPage: React.FC = () => {
       newInitialUsl = usl;
       setInitialLslInput(String(lsl));
       setInitialUslInput(String(usl));
-      alert('Error: LSL must be less than USL. Values have been reset to current valid settings.');
+      alert(
+        'Error: LSL must be less than USL. Values have been reset to current valid settings.'
+      );
       return;
     }
 
@@ -260,7 +265,7 @@ const GaussianVisualizerPage: React.FC = () => {
       alert('Error: Standard deviation must be greater than 0.');
       return;
     }
-    
+
     setInitialMean(newInitialMean);
     setInitialStdev(newInitialStdev);
     setInitialLsl(newInitialLsl);
@@ -276,7 +281,7 @@ const GaussianVisualizerPage: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fbfaf8' }}>
-      <SimpleHeader title='Gaussian Visualizer' />
+      <SimpleHeader title='Gaussian Visualizer' buttonType='galaxy' />
       <div className='gaussian-page-padding'>
         <div className='gaussian-visualizer-feature'>
           <div className='gv-chart-container'>
@@ -425,7 +430,10 @@ const GaussianVisualizerPage: React.FC = () => {
                 </div>
               </div>
               <div className='control-group'>
-                <label htmlFor='lsl-slider' className='control-label label-with-tooltip'>
+                <label
+                  htmlFor='lsl-slider'
+                  className='control-label label-with-tooltip'
+                >
                   {TEXT_CONTENT.CONTROL_LABELS.LSL}
                   <Tooltip content={TEXT_CONTENT.TOOLTIPS.LSL} />
                 </label>
@@ -438,7 +446,9 @@ const GaussianVisualizerPage: React.FC = () => {
                     max={usl - 0.1}
                     step={0.1}
                     value={lsl}
-                    onChange={(e) => handleLslChange(parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      handleLslChange(parseFloat(e.target.value))
+                    }
                   />
                   <input
                     type='number'
@@ -447,14 +457,16 @@ const GaussianVisualizerPage: React.FC = () => {
                     onChange={(e) => setLslInput(e.target.value)}
                     onBlur={handleLslBlur}
                     onKeyDown={(e) =>
-                      e.key === 'Enter' &&
-                      (e.target as HTMLInputElement).blur()
+                      e.key === 'Enter' && (e.target as HTMLInputElement).blur()
                     }
                   />
                 </div>
               </div>
               <div className='control-group'>
-                <label htmlFor='usl-slider' className='control-label label-with-tooltip'>
+                <label
+                  htmlFor='usl-slider'
+                  className='control-label label-with-tooltip'
+                >
                   {TEXT_CONTENT.CONTROL_LABELS.USL}
                   <Tooltip content={TEXT_CONTENT.TOOLTIPS.USL} />
                 </label>
@@ -467,7 +479,9 @@ const GaussianVisualizerPage: React.FC = () => {
                     max={axisMax}
                     step={0.1}
                     value={usl}
-                    onChange={(e) => handleUslChange(parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      handleUslChange(parseFloat(e.target.value))
+                    }
                   />
                   <input
                     type='number'
@@ -476,8 +490,7 @@ const GaussianVisualizerPage: React.FC = () => {
                     onChange={(e) => setUslInput(e.target.value)}
                     onBlur={handleUslBlur}
                     onKeyDown={(e) =>
-                      e.key === 'Enter' &&
-                      (e.target as HTMLInputElement).blur()
+                      e.key === 'Enter' && (e.target as HTMLInputElement).blur()
                     }
                   />
                 </div>
