@@ -16,7 +16,7 @@ interface AuthButtonProps {
 }
 
 const AuthButton: React.FC<AuthButtonProps> = ({ onClick }) => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoading } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -51,6 +51,11 @@ const AuthButton: React.FC<AuthButtonProps> = ({ onClick }) => {
     navigate(path);
     setIsDropdownOpen(false);
   };
+
+  // If still loading, show nothing to prevent flash of sign-in button
+  if (isLoading) {
+    return null;
+  }
 
   // If user is not signed in, show the sign-in button
   if (!user) {

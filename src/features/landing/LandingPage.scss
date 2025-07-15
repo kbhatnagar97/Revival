@@ -41,6 +41,7 @@ body {
 }
 
 .landing-header__content {
+  height: 3.5rem; /* Take full height of fixed header */
   margin: 0 auto;
   padding: 0 2rem;
   display: flex;
