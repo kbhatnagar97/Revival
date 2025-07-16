@@ -50,18 +50,17 @@ body {
 }
 
 .landing-header__logo {
-  a {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-dark-brown);
     text-decoration: none;
     letter-spacing: -0.02em;
-    transition: color 0.2s ease;
+    cursor: default;
+    transition: color 0.9s ease;
 
     &:hover {
       color: var(--accent-gold);
     }
-  }
 }
 
 .landing-header__auth {

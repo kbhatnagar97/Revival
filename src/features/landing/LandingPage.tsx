@@ -55,7 +55,7 @@ const LandingPage: React.FC = () => {
       <header className='landing-header'>
         <div className='landing-header__content'>
           <div className='landing-header__logo'>
-            <Link to='/'>Revival</Link>
+            Revival
           </div>
           <div className='landing-header__auth'>
             <AuthButton onClick={() => setIsAuthModalOpen(true)} />
