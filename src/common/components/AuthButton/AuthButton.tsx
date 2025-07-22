@@ -18,9 +18,15 @@ interface AuthButtonProps {
 const AuthButton: React.FC<AuthButtonProps> = ({ onClick }) => {
   const { user, signOut, isLoading } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Reset image error when user changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.picture]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -81,14 +87,18 @@ const AuthButton: React.FC<AuthButtonProps> = ({ onClick }) => {
         aria-expanded={isDropdownOpen}
       >
         <div className='auth-button__user-info'>
-          {user.picture ? (
+          {user.picture && !imageError ? (
             <img
               src={user.picture}
               alt={user.name || 'User avatar'}
               className='auth-button__avatar'
+              onError={() => {
+                console.warn('Profile picture failed to load, showing fallback avatar');
+                setImageError(true); // Set error state to show fallback
+              }}
             />
           ) : (
-            <div className='auth-button__avatar'>
+            <div className='auth-button__avatar auth-button__avatar--fallback'>
               <FaUser />
             </div>
           )}

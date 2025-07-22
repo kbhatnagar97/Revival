@@ -1,6 +1,6 @@
 import './App.scss';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import HabitTrackerFeature from './features/habit-tracker';
+import HabitTrackerFeature from './features/habit-tracker/screens';
 import GaussianVisualizerPage from './features/gaussian-visualizer';
 import LandingPage from './features/landing/LandingPage';
 import { AuthProvider } from './common/context/AuthProvider';

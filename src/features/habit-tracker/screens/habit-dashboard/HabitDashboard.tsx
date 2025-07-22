@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
-import { useHabits } from './hooks/useHabits';
-import type { Habit } from './context/habit-context';
+import { useHabits } from '../../hooks/useHabits';
+import type { Habit } from '../../context/habit-context';
 import { FaPlus } from 'react-icons/fa';
 import './HabitDashboard.scss';
-import HabitCard from './components/HabitCard';
-import HabitFormModal from './components/HabitFormModal';
+import HabitCard from '../../components/HabitCard';
+import HabitFormModal from '../../components/HabitFormModal';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';

@@ -37,6 +37,7 @@ const HabitFormModal: React.FC<HabitFormModalProps> = ({ habitToEdit, onClose })
   });
   
   const [isClosing, setIsClosing] = useState(false);
+  const [validationError, setValidationError] = useState<string>('');
 
   const handleClose = () => {
     setIsClosing(true);
@@ -76,6 +77,11 @@ const HabitFormModal: React.FC<HabitFormModalProps> = ({ habitToEdit, onClose })
         : [...prev.days, dayIndex];
       return { ...prev, days: newDays };
     });
+    
+    // Clear validation error when user selects days
+    if (validationError) {
+      setValidationError('');
+    }
   };
 
   const handleSelect = (key: 'icon' | 'color', value: string) => {
@@ -85,6 +91,15 @@ const HabitFormModal: React.FC<HabitFormModalProps> = ({ habitToEdit, onClose })
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const { name, goal, icon, color, days } = formData as { name: string; goal: number; icon: string; color: string; days: number[] };
+    
+    // Validation: At least one day must be selected
+    if (days.length === 0) {
+      setValidationError('Please select at least one day for your habit.');
+      return;
+    }
+    
+    // Clear any previous validation errors
+    setValidationError('');
     
     if (habitToEdit) {
       updateHabit(habitToEdit.id, {
@@ -136,6 +151,11 @@ const HabitFormModal: React.FC<HabitFormModalProps> = ({ habitToEdit, onClose })
                   </button>
                 ))}
               </div>
+              {validationError && (
+                <div className="validation-error">
+                  {validationError}
+                </div>
+              )}
             </div>
             <div className="form-group">
               <label>Icon</label>

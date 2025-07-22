@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useHabits } from './hooks/useHabits';
+import { useHabits } from '../../hooks/useHabits';
 import * as FaIcons from 'react-icons/fa';
 import {
   FiTrendingUp,
@@ -10,11 +10,11 @@ import {
   FiZap,
 } from 'react-icons/fi';
 import './HabitDetail.scss';
-import HabitCalendar from './components/HabitCalendar';
-import HabitFormModal from './components/HabitFormModal';
-import HabitCard from './components/HabitCard';
-import ConsistencyRing from './components/ConsistencyRing';
-import Tooltip from '../../common/components/Tooltip';
+import HabitCalendar from '../../components/HabitCalendar';
+import HabitFormModal from '../../components/HabitFormModal';
+import HabitCard from '../../components/HabitCard';
+import ConsistencyRing from '../../components/ConsistencyRing';
+import Tooltip from '../../../../common/components/Tooltip';
 import { Chart } from 'react-chartjs-2';
 import {
   Chart as ChartJS,

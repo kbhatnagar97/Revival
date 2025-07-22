@@ -45,13 +45,26 @@ const convertFirebaseUser = (firebaseUser: FirebaseUser): User => {
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
   };
 
+  // Fix Google profile picture URL to avoid CORS issues
+  const fixGooglePhotoURL = (photoURL: string | null): string | undefined => {
+    if (!photoURL) return undefined;
+    
+    // If it's a Google profile picture, modify the URL parameters
+    if (photoURL.includes('googleusercontent.com')) {
+      // Remove size parameter and add referrer policy friendly parameters
+      return photoURL.replace(/=s\d+-c$/, '=s96-c-rp-mo-br100');
+    }
+    
+    return photoURL;
+  };
+
   return {
     id: firebaseUser.uid,
     email: firebaseUser.email || '',
     name:
       firebaseUser.displayName ||
       (firebaseUser.email ? getNameFromEmail(firebaseUser.email) : 'User'),
-    picture: firebaseUser.photoURL || undefined,
+    picture: fixGooglePhotoURL(firebaseUser.photoURL),
     provider:
       firebaseUser.providerData[0]?.providerId === 'google.com'
         ? 'google'
