@@ -26,7 +26,7 @@ interface UserDocument {
   provider: 'google.com' | 'password'; // Auth method - determines login flow in AuthContext
   createdAt: Timestamp;    // Account creation - set once on signup, used for analytics
   timezone: string; // IANA Time Zone Database name (e.g., "America/Los_Angeles")
-  lastSeenAt: Timestamp;  // Session end time heartbeat function for every 30 seconds threshold 1 minute for updating last seen on any device
+  lastSeenAt: Timestamp;  // Updated every 30 seconds by heartbeat function with 1-minute threshold for session tracking across devices
 }
 ```
 
@@ -39,7 +39,7 @@ interface UserDeviceDocument {
   osName: string;                        // e.g., "iOS", "Android", "Windows", "macOS"
   osVersion: string;                     // e.g., "16.2", "13"
   fcmToken: string;                      // Firebase Cloud Messaging token - used for push notifications
-  lastSeenAt: Timestamp;  // Session end time heartbeat function for every 30 seconds threshold 1 minute for updating last seen for that specific device
+  lastSeenAt: Timestamp;  // Updated every 30 seconds by heartbeat function with 1-minute threshold for device-specific session tracking
 
   // Status & Metadata
   firstRegisteredAt: Timestamp;          // When this device was first seen for this user.
@@ -85,7 +85,7 @@ interface HabitEntry {
 
 ### **5. users/{userId}/userSessions/{sessionId} - UserSession**
 ```typescript
-//Time To Live) policy of 30 days
+// TTL (Time To Live) policy of 30 days
 interface UserSession {
   deviceId: string;       // Links to UserDevice - used to track which device session belongs to
   loginAt: Timestamp;     // Session start time - set on AuthProvider login, shown in security log 
