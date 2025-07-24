@@ -22,16 +22,35 @@ interface UserDocument {
  * Follows DATABASE_SCHEMA.md specifications
  */
 export const onUserCreate = onCall(callableFunctionOptions, async (request) => {
-  // Check if user is authenticated
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const uid = request.auth.uid;
-  const { email, displayName, photoURL, provider } = request.data || {};
-
   try {
-    logger.info(`Creating/updating user document for user: ${uid}`);
+    // Check if user is authenticated
+    if (!request.auth) {
+      logger.error('Unauthenticated request to onUserCreate');
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const uid = request.auth.uid;
+    const userData = request.data || {};
+    const { email, displayName, photoURL, provider } = userData;
+
+    logger.info(`Creating/updating user document for user: ${uid}`, {
+      email: email || 'not provided',
+      displayName: displayName || 'not provided',
+      provider: provider || 'not provided'
+    });
+
+    // Get user email from auth token if not provided in data
+    const userEmail = email || request.auth.token.email || '';
+    const userName = displayName || request.auth.token.name || '';
+    const userPhoto = photoURL || request.auth.token.picture;
+    
+    // Determine provider from auth token if not provided
+    let userProvider: 'google.com' | 'password' = 'password';
+    if (provider) {
+      userProvider = provider;
+    } else if (request.auth.token.firebase?.sign_in_provider) {
+      userProvider = request.auth.token.firebase.sign_in_provider === 'google.com' ? 'google.com' : 'password';
+    }
 
     // Check if user document already exists
     const existingDoc = await db.collection('users').doc(uid).get();
@@ -43,15 +62,19 @@ export const onUserCreate = onCall(callableFunctionOptions, async (request) => {
       });
       
       logger.info(`Updated existing user document for: ${uid}`);
-      return { success: true, message: 'User document updated' };
+      return { 
+        success: true, 
+        message: 'User document updated',
+        user: existingDoc.data()
+      };
     }
 
     // Create new user document matching DATABASE_SCHEMA.md
     const userDoc: UserDocument = {
-      email: email || '',
-      name: displayName || '',
-      picture: photoURL || undefined,
-      provider: provider || 'password',
+      email: userEmail,
+      name: userName,
+      picture: userPhoto || undefined,
+      provider: userProvider,
       createdAt: Timestamp.now(),
       timezone: 'America/Los_Angeles', // Default timezone as per schema
       lastSeenAt: Timestamp.now(),
@@ -60,12 +83,22 @@ export const onUserCreate = onCall(callableFunctionOptions, async (request) => {
     await db.collection('users').doc(uid).set(userDoc);
 
     logger.info(`Successfully created user document for: ${uid}`);
-    return { success: true, message: 'User document created' };
+    return { 
+      success: true, 
+      message: 'User document created',
+      user: userDoc
+    };
   } catch (error) {
-    logger.error('Error creating user document:', error);
+    logger.error('Error in onUserCreate function:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      uid: request.auth?.uid,
+      data: request.data
+    });
+    
     if (error instanceof HttpsError) {
       throw error;
     }
-    throw new HttpsError('internal', 'Failed to create user document');
+    throw new HttpsError('internal', `Failed to create user document: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
