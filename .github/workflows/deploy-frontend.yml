@@ -3,10 +3,8 @@ name: Deploy Frontend to Vercel
 on:
   push:
     branches: [ main, backend ]
-    paths: [ 'packages/frontend/**', 'vercel.json' ]
   pull_request:
     branches: [ main, backend ]
-    paths: [ 'packages/frontend/**', 'vercel.json' ]
   workflow_dispatch:
 
 env:
