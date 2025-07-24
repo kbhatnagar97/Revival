@@ -2,6 +2,14 @@
 
 > A repository of small, focused applications built to practice and solidify modern front-end concepts using React and other modern tools.
 
+## Monorepo Architecture
+
+This project uses a monorepo structure with the following packages:
+
+- **`packages/shared`** - Shared TypeScript types and utilities
+- **`packages/frontend`** - React frontend application
+- **`packages/functions`** - Firebase Cloud Functions backend
+
 ## ✨ Live Demo
 
 Explore the deployed projects here:

@@ -1,7 +1,13 @@
 {
+  "version": 2,
+  "name": "revival",
+  "buildCommand": "npm run build --workspace=packages/frontend",
+  "outputDirectory": "packages/frontend/dist",
+  "installCommand": "npm ci",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- packages/frontend/",
   "rewrites": [
     {
-      "source": "/((?!api|\\.\\w+).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]

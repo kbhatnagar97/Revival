@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cloud Functions</title>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDa5SCa7xIgU3seRoYAUY27Bc2TkUPHq1E",
+            authDomain: "revival-e0aa5.firebaseapp.com",
+            projectId: "revival-e0aa5",
+            storageBucket: "revival-e0aa5.firebasestorage.app",
+            messagingSenderId: "503346575412",
+            appId: "1:503346575412:web:fe47ed7920f46ab3ec3261"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const functions = getFunctions(app, 'asia-south2');
+
+        // Test function
+        window.testGetUserHabits = async () => {
+            const resultDiv = document.getElementById('result');
+            const user = auth.currentUser;
+            
+            if (!user) {
+                resultDiv.innerHTML = '<p style="color: red;">❌ Please sign in first!</p>';
+                return;
+            }
+
+            try {
+                resultDiv.innerHTML = '<p>🔄 Testing getUserHabits...</p>';
+                console.log('Testing getUserHabits for user:', user.uid);
+                
+                const startTime = Date.now();
+                const getUserHabits = httpsCallable(functions, 'getUserHabits');
+                const result = await getUserHabits();
+                const endTime = Date.now();
+                
+                console.log('getUserHabits result:', result);
+                resultDiv.innerHTML = `
+                    <div style="color: green;">
+                        <h3>✅ getUserHabits Success!</h3>
+                        <p><strong>Response Time:</strong> ${endTime - startTime}ms</p>
+                        <p><strong>Data:</strong></p>
+                        <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('getUserHabits error:', error);
+                resultDiv.innerHTML = `
+                    <div style="color: red;">
+                        <h3>❌ getUserHabits Failed!</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Code:</strong> ${error.code}</p>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        };
+
+        // Sign in function
+        window.signInWithGoogle = async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                const result = await signInWithPopup(auth, provider);
+                document.getElementById('user-info').innerHTML = `
+                    <p>✅ Signed in as: ${result.user.displayName}</p>
+                    <p>Email: ${result.user.email}</p>
+                    <p>UID: ${result.user.uid}</p>
+                `;
+            } catch (error) {
+                console.error('Sign in error:', error);
+                document.getElementById('user-info').innerHTML = `
+                    <p style="color: red;">❌ Sign in failed: ${error.message}</p>
+                `;
+            }
+        };
+    </script>
+</head>
+<body>
+    <h1>🧪 Cloud Functions Test</h1>
+    
+    <div id="user-info">
+        <p>Not signed in</p>
+    </div>
+    
+    <button onclick="signInWithGoogle()">🔐 Sign In with Google</button>
+    <button onclick="testGetUserHabits()">🧪 Test getUserHabits</button>
+    
+    <div id="result" style="margin-top: 20px; padding: 20px; border: 1px solid #ccc;">
+        <p>Click "Test getUserHabits" to test the function</p>
+    </div>
+</body>
+</html>
