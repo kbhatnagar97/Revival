@@ -76,7 +76,7 @@ export const onUserCreate = onCall(callableFunctionOptions, async (request) => {
       picture: userPhoto || undefined,
       provider: userProvider,
       createdAt: Timestamp.now(),
-      timezone: 'America/Los_Angeles', // Default timezone as per schema
+      timezone: 'Asia/Kolkata', // Default timezone (Delhi/India)
       lastSeenAt: Timestamp.now(),
     };
 
