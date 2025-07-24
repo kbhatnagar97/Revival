@@ -12,9 +12,23 @@ dist
 dist-ssr
 *.local
 
-# Deployment secrets (never commit!)
+# Environment files and secrets (never commit!)
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .env.deployment
-.env.*.local
+*.env
+
+# Test files with credentials
+test-*.html
+test-production-*.sh
+
+# Firebase credentials
+firebase-config.js
+firebase-config.ts
 
 # Editor directories and files
 .vscode/*
