@@ -34,13 +34,12 @@ jobs:
       - name: Authenticate with Firebase
         run: |
           echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' > $HOME/firebase-service-account.json
-          export GOOGLE_APPLICATION_CREDENTIALS=$HOME/firebase-service-account.json
-          firebase use $FIREBASE_PROJECT_ID
         
       - name: Deploy Functions to Firebase
         run: |
-          export GOOGLE_APPLICATION_CREDENTIALS=$HOME/firebase-service-account.json
           firebase deploy --only functions --project $FIREBASE_PROJECT_ID --force
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: $HOME/firebase-service-account.json
         
       - name: Cleanup
         run: rm -f $HOME/firebase-service-account.json
