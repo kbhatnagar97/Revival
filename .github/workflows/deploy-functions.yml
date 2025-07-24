@@ -27,18 +27,13 @@ jobs:
       - name: Build functions
         run: npm run build --workspace=packages/functions
         
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}'
+          
       - name: Setup Firebase CLI
         run: npm install -g firebase-tools
         
-      - name: Authenticate with Firebase
-        run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' > $HOME/firebase-service-account.json
-        
       - name: Deploy Functions to Firebase
-        run: |
-          firebase deploy --only functions --project $FIREBASE_PROJECT_ID --force
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: $HOME/firebase-service-account.json
-        
-      - name: Cleanup
-        run: rm -f $HOME/firebase-service-account.json
+        run: firebase deploy --only functions --project $FIREBASE_PROJECT_ID --force
