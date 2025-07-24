@@ -15,4 +15,9 @@ This file was created to test the deployment pipeline after resolving authentica
 
 ---
 
-**Status**: Testing deployment pipeline...
+**Status**: GitHub secrets added - Testing deployment pipeline again...
+
+## Update
+- ✅ Added missing `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` secrets
+- ✅ All authentication issues resolved
+- 🧪 Re-testing both frontend and backend deployments
