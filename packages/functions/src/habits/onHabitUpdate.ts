@@ -23,7 +23,18 @@ export const onHabitUpdate = onDocumentUpdated({
   try {
     logger.info(`Habit updated: ${habitId} for user: ${userId}`);
     
-    // Update the lastCalculated timestamp
+    // Check if this update was already done by onHabitEntryWrite
+    // If updatedAt was just updated (within last 5 seconds), skip redundant update
+    const now = new Date();
+    const lastUpdated = afterData.updatedAt?.toDate();
+    const timeDiff = lastUpdated ? now.getTime() - lastUpdated.getTime() : Infinity;
+    
+    if (timeDiff < 5000) { // Less than 5 seconds ago
+      logger.info(`Skipping redundant update for ${habitId} - already updated recently`);
+      return;
+    }
+    
+    // Only update if not recently updated (prevents cascading with onHabitEntryWrite)
     await db.collection(`users/${userId}/habits`).doc(habitId).update({
       updatedAt: Timestamp.now(),
     });

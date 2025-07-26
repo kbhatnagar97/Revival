@@ -4,6 +4,10 @@ exports.deleteHabit = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const config_1 = require("../lib/config");
 const firebase_1 = require("../lib/firebase");
+const firebase_functions_1 = require("firebase-functions");
+/**
+ * Delete a habit and all its entries for the authenticated user
+ */
 exports.deleteHabit = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     // Check if user is authenticated
     if (!request.auth) {
@@ -15,33 +19,20 @@ exports.deleteHabit = (0, https_1.onCall)(config_1.callableFunctionOptions, asyn
         throw new https_1.HttpsError('invalid-argument', 'habitId is required');
     }
     try {
-        const habitRef = firebase_1.db.collection('habits').doc(habitId);
+        firebase_functions_1.logger.info(`Deleting habit: ${habitId} for user: ${userId}`);
+        // Verify habit ownership
+        const habitRef = firebase_1.db.collection(`users/${userId}/habits`).doc(habitId);
         const habitDoc = await habitRef.get();
         if (!habitDoc.exists) {
             throw new https_1.HttpsError('not-found', 'Habit not found');
         }
-        const habitData = habitDoc.data();
-        if ((habitData === null || habitData === void 0 ? void 0 : habitData.userId) !== userId) {
-            throw new https_1.HttpsError('permission-denied', 'Not authorized to delete this habit');
-        }
-        // Delete all habit entries first
-        const entriesSnapshot = await firebase_1.db
-            .collection('habitEntries')
-            .where('userId', '==', userId)
-            .where('habitId', '==', habitId)
-            .get();
-        // Batch delete entries
-        const batch = firebase_1.db.batch();
-        entriesSnapshot.docs.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-        // Delete the habit
-        batch.delete(habitRef);
-        await batch.commit();
-        return { success: true };
+        // Delete the habit document (onHabitDelete trigger will clean up entries)
+        await habitRef.delete();
+        firebase_functions_1.logger.info(`Successfully deleted habit: ${habitId} for user: ${userId}`);
+        return { success: true, message: 'Habit deleted successfully' };
     }
     catch (error) {
-        console.error('Error deleting habit:', error);
+        firebase_functions_1.logger.error('Error deleting habit:', error);
         if (error instanceof https_1.HttpsError) {
             throw error;
         }

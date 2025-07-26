@@ -4,6 +4,10 @@ exports.createHabit = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const config_1 = require("../lib/config");
 const firebase_1 = require("../lib/firebase");
+const firebase_functions_1 = require("firebase-functions");
+/**
+ * Create a new habit for the authenticated user
+ */
 exports.createHabit = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     // Check if user is authenticated
     if (!request.auth) {
@@ -13,51 +17,43 @@ exports.createHabit = (0, https_1.onCall)(config_1.callableFunctionOptions, asyn
     const { name, description, icon, color, goal, frequency, days } = request.data;
     // Validate required fields
     if (!name || !icon || !color || !goal || !frequency) {
-        throw new https_1.HttpsError('invalid-argument', 'Missing required fields');
+        throw new https_1.HttpsError('invalid-argument', 'Missing required fields: name, icon, color, goal, frequency');
     }
     try {
-        // Get all habits to determine the next sort order
-        const habitsSnapshot = await firebase_1.db
-            .collection('habits')
-            .where('userId', '==', userId)
-            .get();
-        // Find the highest sort order
-        let maxSortOrder = -1;
-        habitsSnapshot.docs.forEach(doc => {
-            const data = doc.data();
-            if (data.sortOrder > maxSortOrder) {
-                maxSortOrder = data.sortOrder;
-            }
-        });
-        const nextSortOrder = maxSortOrder + 1;
-        // Create habit document
+        firebase_functions_1.logger.info(`Creating habit for user: ${userId}`, { name, goal, frequency });
+        // Get current max sort order
+        const habitsRef = firebase_1.db.collection(`users/${userId}/habits`);
+        const existingHabits = await habitsRef.orderBy('sortOrder', 'desc').limit(1).get();
+        const maxSortOrder = existingHabits.empty ? 0 : existingHabits.docs[0].data().sortOrder || 0;
+        // Create new habit document
         const habitData = {
-            userId,
             name,
             description: description || '',
             icon,
             color,
             goal,
             frequency,
-            days: days || [0, 1, 2, 3, 4, 5, 6], // Default to all days
+            days: days || [1, 2, 3, 4, 5, 6, 0], // Default to all days
             isActive: true,
-            sortOrder: nextSortOrder,
+            sortOrder: maxSortOrder + 1,
             createdAt: firebase_1.Timestamp.now(),
             updatedAt: firebase_1.Timestamp.now(),
-            analytics: {
-                currentStreak: 0,
-                longestStreak: 0,
-                completionRate: 0,
-                totalCompletions: 0,
-                averageDaily: 0,
-                consistency: 0,
-            },
+            // Initialize analytics
+            currentStreak: 0,
+            longestStreak: 0,
+            completionRate: 0,
+            totalCompletions: 0,
+            averageDaily: 0,
+            consistency: 0,
+            lastCompletedDate: null,
         };
-        const habitRef = await firebase_1.db.collection('habits').add(habitData);
-        return Object.assign(Object.assign({ id: habitRef.id }, habitData), { createdAt: habitData.createdAt.toDate().toISOString(), updatedAt: habitData.updatedAt.toDate().toISOString() });
+        const docRef = await habitsRef.add(habitData);
+        const createdHabit = Object.assign(Object.assign({ id: docRef.id }, habitData), { createdAt: habitData.createdAt.toDate().toISOString(), updatedAt: habitData.updatedAt.toDate().toISOString() });
+        firebase_functions_1.logger.info(`Successfully created habit: ${docRef.id} for user: ${userId}`);
+        return createdHabit;
     }
     catch (error) {
-        console.error('Error creating habit:', error);
+        firebase_functions_1.logger.error('Error creating habit:', error);
         throw new https_1.HttpsError('internal', 'Failed to create habit');
     }
 });

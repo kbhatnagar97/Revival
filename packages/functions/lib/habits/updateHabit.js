@@ -15,26 +15,28 @@ exports.updateHabit = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const config_1 = require("../lib/config");
 const firebase_1 = require("../lib/firebase");
+const firebase_functions_1 = require("firebase-functions");
+/**
+ * Update an existing habit for the authenticated user
+ */
 exports.updateHabit = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
-    var _a, _b;
+    var _a, _b, _c, _d;
     // Check if user is authenticated
     if (!request.auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
     }
     const userId = request.auth.uid;
-    const _c = request.data, { habitId } = _c, updates = __rest(_c, ["habitId"]);
+    const _e = request.data, { habitId } = _e, updates = __rest(_e, ["habitId"]);
     if (!habitId) {
         throw new https_1.HttpsError('invalid-argument', 'habitId is required');
     }
     try {
-        const habitRef = firebase_1.db.collection('habits').doc(habitId);
+        firebase_functions_1.logger.info(`Updating habit: ${habitId} for user: ${userId}`, updates);
+        // Verify habit ownership
+        const habitRef = firebase_1.db.collection(`users/${userId}/habits`).doc(habitId);
         const habitDoc = await habitRef.get();
         if (!habitDoc.exists) {
             throw new https_1.HttpsError('not-found', 'Habit not found');
-        }
-        const habitData = habitDoc.data();
-        if ((habitData === null || habitData === void 0 ? void 0 : habitData.userId) !== userId) {
-            throw new https_1.HttpsError('permission-denied', 'Not authorized to update this habit');
         }
         // Prepare update data
         const updateData = Object.assign(Object.assign({}, updates), { updatedAt: firebase_1.Timestamp.now() });
@@ -46,12 +48,13 @@ exports.updateHabit = (0, https_1.onCall)(config_1.callableFunctionOptions, asyn
         });
         await habitRef.update(updateData);
         // Get updated habit
-        const updatedHabit = await habitRef.get();
-        const updatedData = updatedHabit.data();
-        return Object.assign(Object.assign({ id: habitId }, updatedData), { createdAt: (_a = updatedData === null || updatedData === void 0 ? void 0 : updatedData.createdAt) === null || _a === void 0 ? void 0 : _a.toDate().toISOString(), updatedAt: (_b = updatedData === null || updatedData === void 0 ? void 0 : updatedData.updatedAt) === null || _b === void 0 ? void 0 : _b.toDate().toISOString() });
+        const updatedDoc = await habitRef.get();
+        const updatedHabit = Object.assign(Object.assign({ id: updatedDoc.id }, updatedDoc.data()), { createdAt: (_b = (_a = updatedDoc.data()) === null || _a === void 0 ? void 0 : _a.createdAt) === null || _b === void 0 ? void 0 : _b.toDate().toISOString(), updatedAt: (_d = (_c = updatedDoc.data()) === null || _c === void 0 ? void 0 : _c.updatedAt) === null || _d === void 0 ? void 0 : _d.toDate().toISOString() });
+        firebase_functions_1.logger.info(`Successfully updated habit: ${habitId} for user: ${userId}`);
+        return updatedHabit;
     }
     catch (error) {
-        console.error('Error updating habit:', error);
+        firebase_functions_1.logger.error('Error updating habit:', error);
         if (error instanceof https_1.HttpsError) {
             throw error;
         }

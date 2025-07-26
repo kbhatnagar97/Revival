@@ -4,6 +4,10 @@ exports.getUserHabits = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const config_1 = require("../lib/config");
 const firebase_1 = require("../lib/firebase");
+const firebase_functions_1 = require("firebase-functions");
+/**
+ * Get all habits for the authenticated user
+ */
 exports.getUserHabits = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     // Check if user is authenticated
     if (!request.auth) {
@@ -11,19 +15,17 @@ exports.getUserHabits = (0, https_1.onCall)(config_1.callableFunctionOptions, as
     }
     const userId = request.auth.uid;
     try {
-        // Get user's habits from Firestore
-        const habitsSnapshot = await firebase_1.db
-            .collection('habits')
-            .where('userId', '==', userId)
-            .where('isActive', '==', true)
-            .orderBy('sortOrder')
-            .get();
+        firebase_functions_1.logger.info(`Getting habits for user: ${userId}`);
+        // Get all habits for the user
+        const habitsRef = firebase_1.db.collection(`users/${userId}/habits`);
+        const habitsSnapshot = await habitsRef.orderBy('sortOrder', 'asc').get();
         const habits = habitsSnapshot.docs.map(doc => (Object.assign({ id: doc.id }, doc.data())));
+        firebase_functions_1.logger.info(`Retrieved ${habits.length} habits for user: ${userId}`);
         return habits;
     }
     catch (error) {
-        console.error('Error fetching user habits:', error);
-        throw new https_1.HttpsError('internal', 'Failed to fetch habits');
+        firebase_functions_1.logger.error('Error getting user habits:', error);
+        throw new https_1.HttpsError('internal', 'Failed to get user habits');
     }
 });
 //# sourceMappingURL=getUserHabits.js.map

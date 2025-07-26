@@ -4,6 +4,10 @@ exports.getHabitEntriesForHabit = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const config_1 = require("../lib/config");
 const firebase_1 = require("../lib/firebase");
+const firebase_functions_1 = require("firebase-functions");
+/**
+ * Get habit entries for a specific habit, optionally within a date range
+ */
 exports.getHabitEntriesForHabit = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     // Check if user is authenticated
     if (!request.auth) {
@@ -15,37 +19,36 @@ exports.getHabitEntriesForHabit = (0, https_1.onCall)(config_1.callableFunctionO
         throw new https_1.HttpsError('invalid-argument', 'habitId is required');
     }
     try {
+        firebase_functions_1.logger.info(`Getting entries for habit: ${habitId}, user: ${userId}`, {
+            startDate: startDate || 'not specified',
+            endDate: endDate || 'not specified'
+        });
         // Verify habit ownership
-        const habitRef = firebase_1.db.collection('habits').doc(habitId);
+        const habitRef = firebase_1.db.collection(`users/${userId}/habits`).doc(habitId);
         const habitDoc = await habitRef.get();
         if (!habitDoc.exists) {
             throw new https_1.HttpsError('not-found', 'Habit not found');
         }
-        const habitData = habitDoc.data();
-        if ((habitData === null || habitData === void 0 ? void 0 : habitData.userId) !== userId) {
-            throw new https_1.HttpsError('permission-denied', 'Not authorized to access this habit');
-        }
-        // Build query
-        let query = firebase_1.db
-            .collection('habitEntries')
-            .where('userId', '==', userId)
-            .where('habitId', '==', habitId);
+        // Get entries for the habit
+        const entriesRef = firebase_1.db.collection(`users/${userId}/habits/${habitId}/entries`);
+        let query = entriesRef.orderBy('__name__', 'asc');
+        // Apply date range filter if provided
         if (startDate) {
-            query = query.where('date', '>=', startDate);
+            query = query.where('__name__', '>=', startDate);
         }
         if (endDate) {
-            query = query.where('date', '<=', endDate);
+            query = query.where('__name__', '<=', endDate);
         }
-        query = query.orderBy('date', 'desc');
         const entriesSnapshot = await query.get();
         const entries = entriesSnapshot.docs.map(doc => {
             var _a, _b;
-            return (Object.assign(Object.assign({ id: doc.id }, doc.data()), { createdAt: (_a = doc.data().createdAt) === null || _a === void 0 ? void 0 : _a.toDate().toISOString(), updatedAt: (_b = doc.data().updatedAt) === null || _b === void 0 ? void 0 : _b.toDate().toISOString() }));
+            return (Object.assign(Object.assign({ id: doc.id, habitId, date: doc.id }, doc.data()), { createdAt: (_a = doc.data().createdAt) === null || _a === void 0 ? void 0 : _a.toDate().toISOString(), updatedAt: (_b = doc.data().updatedAt) === null || _b === void 0 ? void 0 : _b.toDate().toISOString() }));
         });
+        firebase_functions_1.logger.info(`Retrieved ${entries.length} entries for habit: ${habitId}`);
         return entries;
     }
     catch (error) {
-        console.error('Error getting habit entries:', error);
+        firebase_functions_1.logger.error('Error getting habit entries for habit:', error);
         if (error instanceof https_1.HttpsError) {
             throw error;
         }

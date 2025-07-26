@@ -9,7 +9,7 @@ const config_1 = require("../lib/config");
  * Triggered when a habit document is updated
  */
 exports.onHabitUpdate = (0, firestore_1.onDocumentUpdated)(Object.assign(Object.assign({}, config_1.firestoreTriggerOptions), { document: 'users/{userId}/habits/{habitId}' }), async (event) => {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     const { userId, habitId } = event.params;
     const beforeData = (_b = (_a = event.data) === null || _a === void 0 ? void 0 : _a.before) === null || _b === void 0 ? void 0 : _b.data();
     const afterData = (_d = (_c = event.data) === null || _c === void 0 ? void 0 : _c.after) === null || _d === void 0 ? void 0 : _d.data();
@@ -19,7 +19,16 @@ exports.onHabitUpdate = (0, firestore_1.onDocumentUpdated)(Object.assign(Object.
     }
     try {
         firebase_functions_1.logger.info(`Habit updated: ${habitId} for user: ${userId}`);
-        // Update the lastCalculated timestamp
+        // Check if this update was already done by onHabitEntryWrite
+        // If updatedAt was just updated (within last 5 seconds), skip redundant update
+        const now = new Date();
+        const lastUpdated = (_e = afterData.updatedAt) === null || _e === void 0 ? void 0 : _e.toDate();
+        const timeDiff = lastUpdated ? now.getTime() - lastUpdated.getTime() : Infinity;
+        if (timeDiff < 5000) { // Less than 5 seconds ago
+            firebase_functions_1.logger.info(`Skipping redundant update for ${habitId} - already updated recently`);
+            return;
+        }
+        // Only update if not recently updated (prevents cascading with onHabitEntryWrite)
         await firebase_1.db.collection(`users/${userId}/habits`).doc(habitId).update({
             updatedAt: firebase_1.Timestamp.now(),
         });
