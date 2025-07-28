@@ -21,12 +21,12 @@ users/{userId} → UserDocument
 ```typescript
 interface UserDocument {
   email: string;           // User's email address - displayed in profile, used for auth
-  name: string;            // Display name - shown in UI header, editable in profile settings
+  displayName: string;            // Display name - shown in UI header, editable in profile settings
   picture?: string;        // Profile image URL - from Google/uploaded, displayed as avatar
   provider: 'google.com' | 'password'; // Auth method - determines login flow in AuthContext
   createdAt: Timestamp;    // Account creation - set once on signup, used for analytics
   timezone: string; // IANA Time Zone Database name (e.g., "America/Los_Angeles")
-  lastSeenAt: Timestamp;  // Updated every 30 seconds by heartbeat function with 1-minute threshold for session tracking across devices
+  lastSeenAt: Timestamp;  // Heartbeat function 5 minutes
 }
 ```
 
@@ -39,7 +39,7 @@ interface UserDeviceDocument {
   osName: string;                        // e.g., "iOS", "Android", "Windows", "macOS"
   osVersion: string;                     // e.g., "16.2", "13"
   fcmToken: string;                      // Firebase Cloud Messaging token - used for push notifications
-  lastSeenAt: Timestamp;  // Updated every 30 seconds by heartbeat function with 1-minute threshold for device-specific session tracking
+  lastSeenAt: Timestamp;  // Heartbeat function 5 minutes
 
   // Status & Metadata
   firstRegisteredAt: Timestamp;          // When this device was first seen for this user.
@@ -61,16 +61,18 @@ interface HabitDocument {
   order: number;                 // Display order for drag-and-drop - determines position in habit list
   isActive: boolean;             // Whether habit is active - used for soft delete functionality
   
-  // cloud functions on every habit completion or decompletion
-  currentStreak: number;         // Current consecutive completion streak - calculcualted by Cloud Functions
-  bestStreak: number;            // All-time best streak - historical maximum for motivation
-  totalCompletions: number;      // Total times goal was met - lifetime achievement counter
+
   
-  // cloud functions on every habit entry update
   analytics: {
-    allTimeConsistency: number;  // Overall completion rate percentage - total completions / total scheduled days
+    // cloud functions on every habit entry update
     totalDebt: number;           // Cumulative missed completions - accountability metric
     totalSurplus: number;        // Cumulative extra completions - overachievement tracking
+    
+    // cloud functions on every habit completion or decompletion
+    currentStreak: number;         // Current consecutive completion streak - calculcualted by Cloud Functions
+    bestStreak: number;            // All-time best streak - historical maximum for motivation
+    totalCompletions: number;      // Total times goal was met - lifetime achievement counter
+    allTimeConsistency: number;  // Overall completion rate percentage - total completions / total scheduled days
   };
 }
 ```
@@ -80,6 +82,10 @@ interface HabitDocument {
 interface HabitEntry {
   count: number;                 // Number of completions for this day
   goalAtTime: number;            // Goal when entry was created
+  completed: boolean;            // Keep as it is
+  notes?: string;               // Keep as it is
+  createdAt: Timestamp;         // Keep as it is
+  lastUpdated: Timestamp;        // Heartbeat function 5 minutes
 }
 ```
 
@@ -89,7 +95,7 @@ interface HabitEntry {
 interface UserSession {
   deviceId: string;       // Links to UserDevice - used to track which device session belongs to
   loginAt: Timestamp;     // Session start time - set on AuthProvider login, shown in security log 
-  lastSeenAt: Timestamp;  // Session end time heartbeat function for every 30 seconds threshold 1 minute for updating last seen
+  lastSeenAt: Timestamp;  // Heartbeat function 5 minutes
   ipAddress?: string;      // IP address of the user - used for security logging
   location?: {             // Location of the user - used for security logging  
     city?: string;          // City of the user - used for security logging

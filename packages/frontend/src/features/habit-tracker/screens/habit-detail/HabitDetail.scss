@@ -292,6 +292,7 @@
   display: grid;
   grid-template-columns: repeat(1, 1fr);
   gap: 2%;
+  padding: 0 0 84px 0;
   align-items: stretch;
   width: 100%;
   min-width: 0;
@@ -320,7 +321,6 @@
   align-items: center;
   justify-content: stretch;
   max-width: 100%;
-  overflow: hidden;
 
   .pod-title {
     font-size: 1rem;
