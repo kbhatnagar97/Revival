@@ -19,12 +19,18 @@ export const getUserHabits = onCall(callableFunctionOptions, async (request) => 
 
     // Get all habits for the user
     const habitsRef = db.collection(`users/${userId}/habits`);
-    const habitsSnapshot = await habitsRef.orderBy('sortOrder', 'asc').get();
+    const habitsSnapshot = await habitsRef.orderBy('order', 'asc').get();
 
-    const habits = habitsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const habits = habitsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Convert timestamps for frontend compatibility
+        createdAt: data.createdAt?.toDate().toISOString(),
+        updatedAt: data.updatedAt?.toDate().toISOString(),
+      };
+    });
 
     logger.info(`Retrieved ${habits.length} habits for user: ${userId}`);
     return habits;

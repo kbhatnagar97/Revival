@@ -2,9 +2,11 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { callableFunctionOptions } from '../lib/config';
 import { db } from '../lib/firebase';
 import { logger } from 'firebase-functions';
+import { DailyEntry, HabitEntry } from '../lib/types';
 
 /**
  * Get habit entries for a specific habit, optionally within a date range
+ * Now queries the new daily entries collection structure
  */
 export const getHabitEntriesForHabit = onCall(callableFunctionOptions, async (request) => {
   // Check if user is authenticated
@@ -33,30 +35,52 @@ export const getHabitEntriesForHabit = onCall(callableFunctionOptions, async (re
       throw new HttpsError('not-found', 'Habit not found');
     }
 
-    // Get entries for the habit
-    const entriesRef = db.collection(`users/${userId}/habits/${habitId}/entries`);
-    let query = entriesRef.orderBy('__name__', 'asc');
+    // Query daily entries collection
+    const entriesRef = db.collection(`users/${userId}/entries`);
+    let query = entriesRef.orderBy('date', 'asc');
 
     // Apply date range filter if provided
     if (startDate) {
-      query = query.where('__name__', '>=', startDate);
+      query = query.where('date', '>=', startDate);
     }
     if (endDate) {
-      query = query.where('__name__', '<=', endDate);
+      query = query.where('date', '<=', endDate);
     }
 
     const entriesSnapshot = await query.get();
 
-    const entries = entriesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      habitId,
-      date: doc.id, // Document ID is the date (YYYY-MM-DD)
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate().toISOString(),
-      updatedAt: doc.data().updatedAt?.toDate().toISOString(),
+    // Filter and transform daily entries to get specific habit data
+    const habitEntries: HabitEntry[] = [];
+    
+    entriesSnapshot.docs.forEach(doc => {
+      const dailyEntry = doc.data() as DailyEntry;
+      
+      // Find the specific habit within this daily entry
+      const habitData = dailyEntry.habits.find(h => h.habitId === habitId);
+      
+      if (habitData) {
+        habitEntries.push({
+          id: `${doc.id}-${habitId}`, // Generate unique ID
+          habitId,
+          date: doc.id, // Document ID is the date (YYYY-MM-DD)
+          count: habitData.count,
+          completed: habitData.completed,
+          goalAtTime: habitData.goalAtTime,
+          notes: habitData.notes,
+          createdAt: habitData.createdAt,
+          updatedAt: habitData.lastUpdated,
+        });
+      }
+    });
+
+    // Transform timestamps for response
+    const entries = habitEntries.map(entry => ({
+      ...entry,
+      createdAt: entry.createdAt?.toDate().toISOString(),
+      updatedAt: entry.updatedAt?.toDate().toISOString(),
     }));
 
-    logger.info(`Retrieved ${entries.length} entries for habit: ${habitId}`);
+    logger.info(`Retrieved ${entries.length} entries for habit: ${habitId} from ${entriesSnapshot.docs.length} daily entries`);
     return entries;
   } catch (error) {
     logger.error('Error getting habit entries for habit:', error);

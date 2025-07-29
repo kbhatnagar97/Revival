@@ -67,11 +67,11 @@ exports.recalculateSummary = (0, https_1.onCall)(config_1.callableFunctionOption
         // Calculate all-time consistency
         const totalScheduledDays = entries.length;
         const allTimeConsistency = totalScheduledDays > 0 ? (totalCompletions / totalScheduledDays) * 100 : 0;
-        // Update habit document with recalculated analytics
+        // Update habit document with recalculated analytics using nested structure
         await habitRef.update({
-            currentStreak,
-            bestStreak,
-            totalCompletions,
+            'analytics.currentStreak': currentStreak,
+            'analytics.bestStreak': bestStreak,
+            'analytics.totalCompletions': totalCompletions,
             'analytics.allTimeConsistency': Math.round(allTimeConsistency * 100) / 100,
             'analytics.totalDebt': totalDebt,
             'analytics.totalSurplus': totalSurplus,

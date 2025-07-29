@@ -4,57 +4,67 @@ import { apiService } from './apiService';
 export interface Habit {
   id: string;
   name: string;
-  description?: string;
   icon: string;
   color: string;
   goal: number;
-  frequency: 'daily' | 'weekly' | 'monthly';
-  days: number[]; // Days of week for weekly habits (0-6, Sunday=0)
-  isActive: boolean;
-  sortOrder: number;
+  scheduledDays: { [day: string]: boolean }; // e.g., { "Monday": true, "Friday": true }
+  status: 'active' | 'paused' | 'archived';
+  reminder?: { isEnabled?: boolean; time?: string; message?: string; } | null;
+  order: number;
   createdAt: string;
   updatedAt: string;
   analytics: {
+    totalDebt: number;
+    totalSurplus: number;
     currentStreak: number;
-    longestStreak: number;
-    completionRate: number;
+    bestStreak: number;
     totalCompletions: number;
-    averageDaily: number;
-    consistency: number;
-    lastCompletedDate?: string;
+    allTimeConsistency: number;
   };
+  
+  // Legacy fields for backward compatibility - will be converted by helper functions
+  days?: number[];
+  isActive?: boolean;
+  sortOrder?: number;
 }
 
 export interface HabitEntry {
-  id: string;
+  id: string;                      // Generated ID combining date and habitId
   habitId: string;
-  date: string; // YYYY-MM-DD format
+  date: string;                    // YYYY-MM-DD format
   count: number;
   completed: boolean;
+  goalAtTime: number;              // Goal when entry was created
   notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DailyEntry {
+  date: string;                    // YYYY-MM-DD format
+  habits: HabitEntry[];            // Array of habit entries for this date
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateHabitRequest {
   name: string;
-  description?: string;
   icon: string;
   color: string;
   goal: number;
-  frequency: 'daily' | 'weekly' | 'monthly';
-  days?: number[];
+  days?: number[]; // Will be converted to scheduledDays by backend
 }
 
 export interface UpdateHabitRequest {
   name?: string;
-  description?: string;
   icon?: string;
   color?: string;
   goal?: number;
-  frequency?: 'daily' | 'weekly' | 'monthly';
-  days?: number[];
-  isActive?: boolean;
+  days?: number[]; // Will be converted to scheduledDays by backend
+  isActive?: boolean; // Will be converted to status by backend
+  sortOrder?: number; // Will be converted to order by backend
+  status?: 'active' | 'paused' | 'archived';
+  reminder?: { isEnabled?: boolean; time?: string; message?: string; } | null;
 }
 
 export interface UpdateHabitEntryRequest {
@@ -63,29 +73,56 @@ export interface UpdateHabitEntryRequest {
   notes?: string;
 }
 
+// Helper functions for schema conversion
+
+function convertScheduledDaysToDays(scheduledDays: { [day: string]: boolean }): number[] {
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const days: number[] = [];
+  dayNames.forEach((dayName, index) => {
+    if (scheduledDays[dayName]) {
+      days.push(index);
+    }
+  });
+  return days;
+}
+
+// Helper function to ensure habit has legacy fields for backward compatibility
+function ensureLegacyFields(habit: Habit): Habit {
+  return {
+    ...habit,
+    // Add legacy fields for backward compatibility
+    days: habit.scheduledDays ? convertScheduledDaysToDays(habit.scheduledDays) : [0, 1, 2, 3, 4, 5, 6],
+    isActive: habit.status === 'active',
+    sortOrder: habit.order,
+  };
+}
+
 class HabitService {
   /**
    * Get all habits for the current user
    */
   async getUserHabits(): Promise<Habit[]> {
-    return await apiService.callFunction<Habit[]>('getUserHabits');
+    const habits = await apiService.callFunction<Habit[]>('getUserHabits');
+    return habits.map(ensureLegacyFields);
   }
 
   /**
    * Create a new habit
    */
   async createHabit(habitData: CreateHabitRequest): Promise<Habit> {
-    return await apiService.callFunction<Habit>('createHabit', habitData);
+    const habit = await apiService.callFunction<Habit>('createHabit', habitData);
+    return ensureLegacyFields(habit);
   }
 
   /**
    * Update an existing habit
    */
   async updateHabit(habitId: string, updates: UpdateHabitRequest): Promise<Habit> {
-    return await apiService.callFunction<Habit>('updateHabit', {
+    const habit = await apiService.callFunction<Habit>('updateHabit', {
       habitId,
       ...updates,
     });
+    return ensureLegacyFields(habit);
   }
 
   /**
@@ -106,7 +143,8 @@ class HabitService {
    * Toggle habit active status
    */
   async toggleHabitActive(habitId: string): Promise<Habit> {
-    return await apiService.callFunction<Habit>('toggleHabitActive', { habitId });
+    const habit = await apiService.callFunction<Habit>('toggleHabitActive', { habitId });
+    return ensureLegacyFields(habit);
   }
 
   /**

@@ -41,7 +41,7 @@ const HabitDashboard = () => {
     const todayDateString = getLocalDateString(today);
 
     return habits
-      .filter((habit) => habit.days.includes(todayDayIndex))
+      .filter((habit) => habit.days?.includes(todayDayIndex) ?? false)
       .map((habit) => ({
         ...habit,
         count: habit.completionData?.[todayDateString] || 0,

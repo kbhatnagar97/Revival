@@ -5,10 +5,6 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
           "fieldPath": "isActive",
           "order": "ASCENDING"
         },
@@ -19,17 +15,19 @@
       ]
     },
     {
-      "collectionGroup": "habitEntries",
+      "collectionGroup": "entries",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "userId",
+          "fieldPath": "date",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "habitId",
-          "order": "ASCENDING"
-        },
+        }
+      ]
+    },
+    {
+      "collectionGroup": "entries",
+      "queryScope": "COLLECTION",
+      "fields": [
         {
           "fieldPath": "date",
           "order": "DESCENDING"
@@ -37,11 +35,11 @@
       ]
     },
     {
-      "collectionGroup": "habitEntries",
+      "collectionGroup": "entries",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "userId",
+          "fieldPath": "habits.habitId",
           "order": "ASCENDING"
         },
         {
@@ -51,20 +49,16 @@
       ]
     },
     {
-      "collectionGroup": "habitEntries",
+      "collectionGroup": "entries",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "habitId",
+          "fieldPath": "habits.habitId",
           "order": "ASCENDING"
         },
         {
           "fieldPath": "date",
-          "order": "ASCENDING"
+          "order": "DESCENDING"
         }
       ]
     }

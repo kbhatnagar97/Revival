@@ -106,7 +106,7 @@ const HabitFormModal: React.FC<HabitFormModalProps> = ({ habitToEdit, onClose })
         name, goal, icon, color, days
       });
     } else {
-      addHabit({ name, goal, icon, color, days, frequency: 'daily' });
+      addHabit({ name, goal, icon, color, days });
     }
     handleClose();
   };

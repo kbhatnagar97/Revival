@@ -7,10 +7,9 @@ const firebase_1 = require("../lib/firebase");
 const firebase_functions_1 = require("firebase-functions");
 /**
  * Update or create a habit entry for a specific date
- * This will trigger onHabitEntryWrite for streak calculation
+ * Now works with the new daily entries collection structure
  */
 exports.updateHabitEntry = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
-    var _a;
     // Check if user is authenticated
     if (!request.auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
@@ -41,48 +40,75 @@ exports.updateHabitEntry = (0, https_1.onCall)(config_1.callableFunctionOptions,
         if (!habitData) {
             throw new https_1.HttpsError('not-found', 'Habit data not found');
         }
-        // Get or create the entry
-        const entryRef = firebase_1.db.collection(`users/${userId}/habits/${habitId}/entries`).doc(date);
+        // Get or create the daily entry
+        const entryRef = firebase_1.db.collection(`users/${userId}/entries`).doc(date);
         const entryDoc = await entryRef.get();
         const now = firebase_1.Timestamp.now();
-        let entryData;
+        let dailyEntry;
+        let habitEntryData;
         if (entryDoc.exists) {
-            // Update existing entry
-            const updates = {
-                updatedAt: now,
-            };
-            if (count !== undefined)
-                updates.count = count;
-            if (completed !== undefined)
-                updates.completed = completed;
-            if (notes !== undefined)
-                updates.notes = notes;
-            // Determine completion status
-            const finalCount = count !== undefined ? count : ((_a = entryDoc.data()) === null || _a === void 0 ? void 0 : _a.count) || 0;
-            updates.completed = finalCount >= habitData.goal;
-            await entryRef.update(updates);
-            // Get updated entry
-            const updatedDoc = await entryRef.get();
-            entryData = updatedDoc.data();
+            // Update existing daily entry
+            dailyEntry = entryDoc.data();
+            const habitIndex = dailyEntry.habits.findIndex(h => h.habitId === habitId);
+            if (habitIndex >= 0) {
+                // Update existing habit entry within daily entry
+                const existingHabitEntry = dailyEntry.habits[habitIndex];
+                const finalCount = count !== undefined ? count : existingHabitEntry.count;
+                habitEntryData = Object.assign(Object.assign({}, existingHabitEntry), { count: finalCount, completed: completed !== undefined ? completed : finalCount >= habitData.goal, notes: notes !== undefined ? notes : existingHabitEntry.notes, lastUpdated: now });
+                dailyEntry.habits[habitIndex] = habitEntryData;
+            }
+            else {
+                // Add new habit entry to existing daily entry
+                const finalCount = count || 0;
+                habitEntryData = {
+                    habitId,
+                    count: finalCount,
+                    completed: completed !== undefined ? completed : finalCount >= habitData.goal,
+                    goalAtTime: habitData.goal,
+                    notes: notes || '',
+                    createdAt: now,
+                    lastUpdated: now,
+                };
+                dailyEntry.habits.push(habitEntryData);
+            }
+            // Update the daily entry
+            await entryRef.update({
+                habits: dailyEntry.habits,
+                updatedAt: now
+            });
         }
         else {
-            // Create new entry
+            // Create new daily entry with first habit
             const finalCount = count || 0;
-            entryData = {
+            habitEntryData = {
+                habitId,
                 count: finalCount,
-                completed: finalCount >= habitData.goal,
+                completed: completed !== undefined ? completed : finalCount >= habitData.goal,
+                goalAtTime: habitData.goal,
                 notes: notes || '',
-                goalAtTime: habitData.goal, // Store goal at time of entry
+                createdAt: now,
+                lastUpdated: now,
+            };
+            dailyEntry = {
+                date,
+                habits: [habitEntryData],
                 createdAt: now,
                 updatedAt: now,
             };
-            await entryRef.set(entryData);
+            await entryRef.set(dailyEntry);
         }
-        if (!entryData) {
-            throw new https_1.HttpsError('internal', 'Failed to create/update entry data');
-        }
-        const result = Object.assign(Object.assign({ id: date, habitId,
-            date }, entryData), { createdAt: entryData.createdAt.toDate().toISOString(), updatedAt: entryData.updatedAt.toDate().toISOString() });
+        // Return habit entry in legacy format for backward compatibility
+        const result = {
+            id: `${date}-${habitId}`,
+            habitId,
+            date,
+            count: habitEntryData.count,
+            completed: habitEntryData.completed,
+            goalAtTime: habitEntryData.goalAtTime,
+            notes: habitEntryData.notes,
+            createdAt: habitEntryData.createdAt.toDate().toISOString(),
+            updatedAt: habitEntryData.lastUpdated.toDate().toISOString(),
+        };
         firebase_functions_1.logger.info(`Successfully updated habit entry for habit: ${habitId}, date: ${date}`);
         return result;
     }

@@ -18,8 +18,14 @@ exports.getUserHabits = (0, https_1.onCall)(config_1.callableFunctionOptions, as
         firebase_functions_1.logger.info(`Getting habits for user: ${userId}`);
         // Get all habits for the user
         const habitsRef = firebase_1.db.collection(`users/${userId}/habits`);
-        const habitsSnapshot = await habitsRef.orderBy('sortOrder', 'asc').get();
-        const habits = habitsSnapshot.docs.map(doc => (Object.assign({ id: doc.id }, doc.data())));
+        const habitsSnapshot = await habitsRef.orderBy('order', 'asc').get();
+        const habits = habitsSnapshot.docs.map(doc => {
+            var _a, _b;
+            const data = doc.data();
+            return Object.assign(Object.assign({ id: doc.id }, data), { 
+                // Convert timestamps for frontend compatibility
+                createdAt: (_a = data.createdAt) === null || _a === void 0 ? void 0 : _a.toDate().toISOString(), updatedAt: (_b = data.updatedAt) === null || _b === void 0 ? void 0 : _b.toDate().toISOString() });
+        });
         firebase_functions_1.logger.info(`Retrieved ${habits.length} habits for user: ${userId}`);
         return habits;
     }

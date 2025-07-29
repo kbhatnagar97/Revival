@@ -3,6 +3,20 @@ import { callableFunctionOptions } from '../lib/config';
 import { db, Timestamp } from '../lib/firebase';
 import { logger } from 'firebase-functions';
 
+// Helper function to convert days array to scheduledDays object
+function convertDaysToScheduledDays(days?: number[]): { [day: string]: boolean } {
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const defaultDays = [1, 2, 3, 4, 5, 6, 0]; // Default to all days
+  const daysToUse = days || defaultDays;
+  
+  const scheduledDays: { [day: string]: boolean } = {};
+  dayNames.forEach((dayName, index) => {
+    scheduledDays[dayName] = daysToUse.includes(index);
+  });
+  
+  return scheduledDays;
+}
+
 /**
  * Create a new habit for the authenticated user
  */
@@ -13,15 +27,15 @@ export const createHabit = onCall(callableFunctionOptions, async (request) => {
   }
 
   const userId = request.auth.uid;
-  const { name, description, icon, color, goal, frequency, days } = request.data;
+  const { name, icon, color, goal, days } = request.data;
 
   // Validate required fields
-  if (!name || !icon || !color || !goal || !frequency) {
-    throw new HttpsError('invalid-argument', 'Missing required fields: name, icon, color, goal, frequency');
+  if (!name || !icon || !color || !goal) {
+    throw new HttpsError('invalid-argument', 'Missing required fields: name, icon, color, goal');
   }
 
   try {
-    logger.info(`Creating habit for user: ${userId}`, { name, goal, frequency });
+    logger.info(`Creating habit for user: ${userId}`, { name, goal });
 
     // Get current max sort order
     const habitsRef = db.collection(`users/${userId}/habits`);
@@ -31,24 +45,23 @@ export const createHabit = onCall(callableFunctionOptions, async (request) => {
     // Create new habit document
     const habitData = {
       name,
-      description: description || '',
       icon,
       color,
       goal,
-      frequency,
-      days: days || [1, 2, 3, 4, 5, 6, 0], // Default to all days
-      isActive: true,
-      sortOrder: maxSortOrder + 1,
+      scheduledDays: convertDaysToScheduledDays(days),
+      status: 'active' as const,
+      reminder: null,
+      analytics: {
+        totalDebt: 0,
+        totalSurplus: 0,
+        currentStreak: 0,
+        bestStreak: 0,
+        totalCompletions: 0,
+        allTimeConsistency: 0,
+      },
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
-      // Initialize analytics
-      currentStreak: 0,
-      longestStreak: 0,
-      completionRate: 0,
-      totalCompletions: 0,
-      averageDaily: 0,
-      consistency: 0,
-      lastCompletedDate: null,
+      order: maxSortOrder + 1,
     };
 
     const docRef = await habitsRef.add(habitData);

@@ -26,9 +26,20 @@ exports.updateHabit = (0, https_1.onCall)(config_1.callableFunctionOptions, asyn
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
     }
     const userId = request.auth.uid;
-    const _e = request.data, { habitId } = _e, updates = __rest(_e, ["habitId"]);
+    const _e = request.data, { habitId, days, sortOrder, isActive } = _e, updates = __rest(_e, ["habitId", "days", "sortOrder", "isActive"]);
     if (!habitId) {
         throw new https_1.HttpsError('invalid-argument', 'habitId is required');
+    }
+    // Helper function to convert days array to scheduledDays object if needed
+    function convertDaysToScheduledDays(days) {
+        if (!days)
+            return undefined;
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const scheduledDays = {};
+        dayNames.forEach((dayName, index) => {
+            scheduledDays[dayName] = days.includes(index);
+        });
+        return scheduledDays;
     }
     try {
         firebase_functions_1.logger.info(`Updating habit: ${habitId} for user: ${userId}`, updates);
@@ -38,8 +49,18 @@ exports.updateHabit = (0, https_1.onCall)(config_1.callableFunctionOptions, asyn
         if (!habitDoc.exists) {
             throw new https_1.HttpsError('not-found', 'Habit not found');
         }
-        // Prepare update data
+        // Prepare update data with schema conversions
         const updateData = Object.assign(Object.assign({}, updates), { updatedAt: firebase_1.Timestamp.now() });
+        // Convert legacy fields to new schema
+        if (days !== undefined) {
+            updateData.scheduledDays = convertDaysToScheduledDays(days);
+        }
+        if (sortOrder !== undefined) {
+            updateData.order = sortOrder;
+        }
+        if (isActive !== undefined) {
+            updateData.status = isActive ? 'active' : 'paused';
+        }
         // Remove undefined values
         Object.keys(updateData).forEach(key => {
             if (updateData[key] === undefined) {

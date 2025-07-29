@@ -1,11 +1,12 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { callableFunctionOptions } from '../lib/config';
-import { db } from '../lib/firebase';
+import { db, Timestamp } from '../lib/firebase';
 import { logger } from 'firebase-functions';
+import { DailyEntry } from '../lib/types';
 
 /**
  * Delete a habit entry for a specific date
- * This will trigger onHabitEntryWrite for streak recalculation
+ * Now works with the new daily entries collection structure
  */
 export const deleteHabitEntry = onCall(callableFunctionOptions, async (request) => {
   // Check if user is authenticated
@@ -37,16 +38,36 @@ export const deleteHabitEntry = onCall(callableFunctionOptions, async (request) 
       throw new HttpsError('not-found', 'Habit not found');
     }
 
-    // Check if entry exists
-    const entryRef = db.collection(`users/${userId}/habits/${habitId}/entries`).doc(date);
+    // Get the daily entry
+    const entryRef = db.collection(`users/${userId}/entries`).doc(date);
     const entryDoc = await entryRef.get();
 
     if (!entryDoc.exists) {
-      throw new HttpsError('not-found', 'Habit entry not found');
+      throw new HttpsError('not-found', 'Daily entry not found');
     }
 
-    // Delete the entry
-    await entryRef.delete();
+    const dailyEntry = entryDoc.data() as DailyEntry;
+    const habitIndex = dailyEntry.habits.findIndex(h => h.habitId === habitId);
+
+    if (habitIndex === -1) {
+      throw new HttpsError('not-found', 'Habit entry not found for this date');
+    }
+
+    // Remove the habit from the habits array
+    dailyEntry.habits.splice(habitIndex, 1);
+
+    if (dailyEntry.habits.length === 0) {
+      // If no habits remain, delete the entire daily entry
+      await entryRef.delete();
+      logger.info(`Deleted entire daily entry for date: ${date} (no habits remaining)`);
+    } else {
+      // Update the daily entry with the remaining habits
+      await entryRef.update({
+        habits: dailyEntry.habits,
+        updatedAt: Timestamp.now()
+      });
+      logger.info(`Removed habit ${habitId} from daily entry for date: ${date}`);
+    }
 
     logger.info(`Successfully deleted habit entry for habit: ${habitId}, date: ${date}`);
     return { success: true, message: 'Habit entry deleted successfully' };

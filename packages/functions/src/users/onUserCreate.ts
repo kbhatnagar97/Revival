@@ -8,7 +8,7 @@ import { db, Timestamp } from '../lib/firebase';
  */
 interface UserDocument {
   email: string;
-  name: string;
+  displayName: string;
   picture?: string;
   provider: 'google.com' | 'password';
   createdAt: Timestamp;
@@ -72,7 +72,7 @@ export const onUserCreate = onCall(callableFunctionOptions, async (request) => {
     // Create new user document matching DATABASE_SCHEMA.md
     const userDoc: UserDocument = {
       email: userEmail,
-      name: userName,
+      displayName: userName,
       picture: userPhoto || undefined,
       provider: userProvider,
       createdAt: Timestamp.now(),

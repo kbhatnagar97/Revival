@@ -7,6 +7,7 @@ const firebase_1 = require("../lib/firebase");
 const firebase_functions_1 = require("firebase-functions");
 /**
  * Get habit entries for a date range across all habits
+ * Now queries the new daily entries collection structure
  */
 exports.getHabitEntries = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     // Check if user is authenticated
@@ -20,28 +21,39 @@ exports.getHabitEntries = (0, https_1.onCall)(config_1.callableFunctionOptions, 
     }
     try {
         firebase_functions_1.logger.info(`Getting habit entries for user: ${userId}, range: ${startDate} to ${endDate}`);
-        const entries = [];
-        // Get all habits for the user
-        const habitsRef = firebase_1.db.collection(`users/${userId}/habits`);
-        const habitsSnapshot = await habitsRef.get();
-        // For each habit, get entries in the date range
-        for (const habitDoc of habitsSnapshot.docs) {
-            const habitId = habitDoc.id;
-            const entriesRef = firebase_1.db.collection(`users/${userId}/habits/${habitId}/entries`);
-            // Query entries within date range
-            const entriesSnapshot = await entriesRef
-                .where('__name__', '>=', startDate)
-                .where('__name__', '<=', endDate)
-                .get();
-            entriesSnapshot.docs.forEach(entryDoc => {
-                var _a, _b;
-                entries.push(Object.assign(Object.assign({ id: entryDoc.id, habitId, date: entryDoc.id }, entryDoc.data()), { createdAt: (_a = entryDoc.data().createdAt) === null || _a === void 0 ? void 0 : _a.toDate().toISOString(), updatedAt: (_b = entryDoc.data().updatedAt) === null || _b === void 0 ? void 0 : _b.toDate().toISOString() }));
+        // Query daily entries collection instead of habit subcollections
+        const entriesRef = firebase_1.db.collection(`users/${userId}/entries`);
+        const entriesSnapshot = await entriesRef
+            .where('date', '>=', startDate)
+            .where('date', '<=', endDate)
+            .orderBy('date', 'desc')
+            .get();
+        // Transform daily entries to individual habit entries for backward compatibility
+        const habitEntries = [];
+        entriesSnapshot.docs.forEach(doc => {
+            const dailyEntry = doc.data();
+            // Extract each habit entry from the daily entry
+            dailyEntry.habits.forEach(habitData => {
+                habitEntries.push({
+                    id: `${doc.id}-${habitData.habitId}`, // Generate unique ID
+                    habitId: habitData.habitId,
+                    date: doc.id, // Document ID is the date (YYYY-MM-DD)
+                    count: habitData.count,
+                    completed: habitData.completed,
+                    goalAtTime: habitData.goalAtTime,
+                    notes: habitData.notes,
+                    createdAt: habitData.createdAt,
+                    updatedAt: habitData.lastUpdated,
+                });
             });
-        }
-        // Sort by date
-        entries.sort((a, b) => a.date.localeCompare(b.date));
-        firebase_functions_1.logger.info(`Retrieved ${entries.length} habit entries for user: ${userId}`);
-        return entries;
+        });
+        // Sort by date (already sorted by query, but ensure consistency)
+        habitEntries.sort((a, b) => a.date.localeCompare(b.date));
+        firebase_functions_1.logger.info(`Retrieved ${habitEntries.length} habit entries from ${entriesSnapshot.docs.length} daily entries for user: ${userId}`);
+        return habitEntries.map(entry => {
+            var _a, _b;
+            return (Object.assign(Object.assign({}, entry), { createdAt: (_a = entry.createdAt) === null || _a === void 0 ? void 0 : _a.toDate().toISOString(), updatedAt: (_b = entry.updatedAt) === null || _b === void 0 ? void 0 : _b.toDate().toISOString() }));
+        });
     }
     catch (error) {
         firebase_functions_1.logger.error('Error getting habit entries:', error);

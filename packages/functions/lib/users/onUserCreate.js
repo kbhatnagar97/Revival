@@ -55,7 +55,7 @@ exports.onUserCreate = (0, https_1.onCall)(config_1.callableFunctionOptions, asy
         // Create new user document matching DATABASE_SCHEMA.md
         const userDoc = {
             email: userEmail,
-            name: userName,
+            displayName: userName,
             picture: userPhoto || undefined,
             provider: userProvider,
             createdAt: firebase_1.Timestamp.now(),

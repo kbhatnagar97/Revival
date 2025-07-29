@@ -249,7 +249,7 @@ const HabitDetail = () => {
     const dayIndex = selectedDate.getDay();
     const dateString = getLocalDateString(selectedDate);
     return habits
-      .filter((habit) => habit.days.includes(dayIndex))
+      .filter((habit) => habit.days?.includes(dayIndex) ?? false)
       .map((habit) => ({
         ...habit,
         count: habit.completionData?.[dateString] || 0,
@@ -375,7 +375,7 @@ const HabitDetail = () => {
   const { current: currentStreak, best: bestStreak } = calculateStreaks(
     mainHabit.completionData,
     mainHabit.goal,
-    mainHabit.days
+    mainHabit.days || []
   );
   const totalCompletions = Object.values(mainHabit.completionData).filter(
     (c) => c >= mainHabit.goal
@@ -383,7 +383,7 @@ const HabitDetail = () => {
   const { debt: liveDebt, surplus: liveSurplus } = calculateCumulativeStats(
     mainHabit.completionData,
     mainHabit.goal,
-    mainHabit.days
+    mainHabit.days || []
   );
   const netBalance = liveSurplus - liveDebt;
   const debtPercentage =
@@ -394,12 +394,12 @@ const HabitDetail = () => {
   const allTimeConsistency = calculateCompletionRate(
     mainHabit.completionData,
     mainHabit.goal,
-    mainHabit.days
+    mainHabit.days || []
   );
   const weeklyFocus = calculateCompletionRate(
     mainHabit.completionData,
     mainHabit.goal,
-    mainHabit.days,
+    mainHabit.days || [],
     7
   );
   const surplusRate = calculateSurplusRate(

@@ -1,7 +1,7 @@
 "use strict";
 // Core Cloud Functions as specified in CLOUD_FUNCTIONS_IMPLEMENTATION_PLAN.md
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.recalculateSummary = exports.onHabitEntryWrite = exports.onHabitDelete = exports.onHabitUpdate = exports.deleteHabitEntry = exports.updateHabitEntry = exports.getHabitEntriesForHabit = exports.getHabitEntries = exports.deleteHabit = exports.updateHabit = exports.createHabit = exports.getUserHabits = exports.onUserCreate = void 0;
+exports.cleanupOldHabitEntries = exports.migrateToDailyEntries = exports.recalculateSummary = exports.onHabitEntryWrite = exports.onHabitDelete = exports.onHabitUpdate = exports.deleteHabitEntry = exports.updateHabitEntry = exports.getHabitEntriesForHabit = exports.getHabitEntries = exports.deleteHabit = exports.updateHabit = exports.createHabit = exports.getUserHabits = exports.onUserCreate = void 0;
 // User Functions
 var onUserCreate_1 = require("./users/onUserCreate");
 Object.defineProperty(exports, "onUserCreate", { enumerable: true, get: function () { return onUserCreate_1.onUserCreate; } });
@@ -32,4 +32,8 @@ var onHabitEntryWrite_1 = require("./habits/onHabitEntryWrite");
 Object.defineProperty(exports, "onHabitEntryWrite", { enumerable: true, get: function () { return onHabitEntryWrite_1.onHabitEntryWrite; } });
 var recalculateSummary_1 = require("./habits/recalculateSummary");
 Object.defineProperty(exports, "recalculateSummary", { enumerable: true, get: function () { return recalculateSummary_1.recalculateSummary; } });
+// Migration Functions (Schema Migration)
+var migrateToDaily_Entries_1 = require("./migration/migrateToDaily Entries");
+Object.defineProperty(exports, "migrateToDailyEntries", { enumerable: true, get: function () { return migrateToDaily_Entries_1.migrateToDailyEntries; } });
+Object.defineProperty(exports, "cleanupOldHabitEntries", { enumerable: true, get: function () { return migrateToDaily_Entries_1.cleanupOldHabitEntries; } });
 //# sourceMappingURL=index.js.map

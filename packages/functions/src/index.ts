@@ -20,3 +20,6 @@ export { onHabitUpdate } from './habits/onHabitUpdate';
 export { onHabitDelete } from './habits/onHabitDelete';
 export { onHabitEntryWrite } from './habits/onHabitEntryWrite';
 export { recalculateSummary } from './habits/recalculateSummary';
+
+// Migration Functions (Schema Migration)
+export { migrateToDailyEntries, cleanupOldHabitEntries } from './migration/migrateToDaily Entries';
