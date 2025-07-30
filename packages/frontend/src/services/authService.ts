@@ -11,14 +11,36 @@ import {
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { apiService } from './apiService';
+import { deviceService } from './deviceService';
+import { sessionService } from './sessionService';
 
 // Google Auth Provider
 const googleProvider = new GoogleAuthProvider();
+
+// Helper function to initialize device and session tracking
+const initializeDeviceAndSession = async () => {
+  try {
+    // Register the device
+    await deviceService.registerDevice();
+    console.log('Device registered successfully');
+    
+    // Initialize session tracking
+    await sessionService.initializeSession();
+    console.log('Session tracking initialized');
+  } catch (error) {
+    console.error('Failed to initialize device and session tracking:', error);
+    // Don't throw here - authentication succeeded, tracking is secondary
+  }
+};
 
 export const authService = {
   // Sign in with email and password
   signInWithEmail: async (email: string, password: string) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    
+    // Initialize device and session tracking
+    await initializeDeviceAndSession();
+    
     return userCredential.user;
   },
 
@@ -46,6 +68,9 @@ export const authService = {
       // Don't throw here - user creation succeeded, document creation is secondary
     }
     
+    // Initialize device and session tracking
+    await initializeDeviceAndSession();
+    
     return userCredential.user;
   },
 
@@ -66,11 +91,17 @@ export const authService = {
       // Don't throw here - sign-in succeeded, document creation is secondary
     }
     
+    // Initialize device and session tracking
+    await initializeDeviceAndSession();
+    
     return result.user;
   },
 
   // Sign out
   signOut: async () => {
+    // Clear session tracking before signing out
+    sessionService.clearSession();
+    
     await signOut(auth);
   },
 
