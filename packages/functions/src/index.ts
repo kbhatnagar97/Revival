@@ -8,6 +8,7 @@ export { getUserHabits } from './habits/getUserHabits';
 export { createHabit } from './habits/createHabit';
 export { updateHabit } from './habits/updateHabit';
 export { deleteHabit } from './habits/deleteHabit';
+export { reorderHabits } from './habits/reorderHabits';
 
 // Habit Entry CRUD Functions (Callable)
 export { getHabitEntries } from './habits/getHabitEntries';
