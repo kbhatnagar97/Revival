@@ -14,16 +14,35 @@ const getDeviceType = (): 'mobile' | 'web' | 'desktop' => {
   return 'web';
 };
 
-const getOperatingSystem = (): string => {
+const getOperatingSystem = (): { osName: string; osVersion: string } => {
   const userAgent = navigator.userAgent;
   
-  if (userAgent.includes('Windows')) return 'Windows';
-  if (userAgent.includes('Mac OS')) return 'macOS';
-  if (userAgent.includes('Linux')) return 'Linux';
-  if (userAgent.includes('Android')) return 'Android';
-  if (userAgent.includes('iPhone') || userAgent.includes('iPad')) return 'iOS';
+  // Extract OS name and version
+  let osName = 'Unknown';
+  let osVersion = 'Unknown';
   
-  return 'Unknown';
+  if (userAgent.includes('Windows')) {
+    osName = 'Windows';
+    const match = userAgent.match(/Windows NT ([\d.]+)/);
+    osVersion = match ? match[1] : 'Unknown';
+  } else if (userAgent.includes('Mac OS')) {
+    osName = 'macOS';
+    const match = userAgent.match(/Mac OS X ([\d_]+)/);
+    osVersion = match ? match[1].replace(/_/g, '.') : 'Unknown';
+  } else if (userAgent.includes('Linux')) {
+    osName = 'Linux';
+    osVersion = 'Unknown';
+  } else if (userAgent.includes('Android')) {
+    osName = 'Android';
+    const match = userAgent.match(/Android ([\d.]+)/);
+    osVersion = match ? match[1] : 'Unknown';
+  } else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
+    osName = 'iOS';
+    const match = userAgent.match(/OS ([\d_]+)/);
+    osVersion = match ? match[1].replace(/_/g, '.') : 'Unknown';
+  }
+  
+  return { osName, osVersion };
 };
 
 const getBrowserInfo = (): string => {
@@ -53,16 +72,18 @@ const getOrCreateDeviceId = (): string => {
 
 export interface DeviceInfo {
   deviceId: string;
-  deviceType: 'mobile' | 'web' | 'desktop';
-  operatingSystem: string;
+  type: 'mobile' | 'web' | 'desktop';
+  osName: string;
+  osVersion: string;
   deviceModel: string;
   fcmToken?: string;
 }
 
 export interface UserDevice {
   id: string;
-  deviceType: 'mobile' | 'web' | 'desktop';
-  operatingSystem: string;
+  type: 'mobile' | 'web' | 'desktop';
+  osName: string;
+  osVersion: string;
   deviceModel: string;
   fcmToken?: string;
   isActive: boolean;
@@ -75,10 +96,12 @@ export const deviceService = {
    * Get current device information
    */
   getCurrentDeviceInfo: (): DeviceInfo => {
+    const osInfo = getOperatingSystem();
     return {
       deviceId: getOrCreateDeviceId(),
-      deviceType: getDeviceType(),
-      operatingSystem: getOperatingSystem(),
+      type: getDeviceType(),
+      osName: osInfo.osName,
+      osVersion: osInfo.osVersion,
       deviceModel: getBrowserInfo(),
       // FCM token would be set separately when push notifications are implemented
       fcmToken: undefined,
@@ -98,8 +121,9 @@ export const deviceService = {
     try {
       const result = await apiService.callFunction<{ success: boolean; deviceId: string }>('registerDevice', {
         deviceId: deviceInfo.deviceId,
-        deviceType: deviceInfo.deviceType,
-        operatingSystem: deviceInfo.operatingSystem,
+        type: deviceInfo.type,
+        osName: deviceInfo.osName,
+        osVersion: deviceInfo.osVersion,
         deviceModel: deviceInfo.deviceModel,
         fcmToken: deviceInfo.fcmToken,
       });
@@ -134,8 +158,9 @@ export const deviceService = {
     try {
       await apiService.callFunction('registerDevice', {
         deviceId: deviceInfo.deviceId,
-        deviceType: deviceInfo.deviceType,
-        operatingSystem: deviceInfo.operatingSystem,
+        type: deviceInfo.type,
+        osName: deviceInfo.osName,
+        osVersion: deviceInfo.osVersion,
         deviceModel: deviceInfo.deviceModel,
         fcmToken: fcmToken,
       });
