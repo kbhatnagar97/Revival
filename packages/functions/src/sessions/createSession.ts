@@ -26,32 +26,45 @@ export const createSession = onCall(callableFunctionOptions, async (request) => 
   }
 
   try {
-    logger.info(`Creating session for user: ${userId}, device: ${deviceId}`);
+    logger.info(`[createSession] Starting session creation for user: ${userId}, device: ${deviceId}`);
+    logger.info(`[createSession] Request data:`, JSON.stringify({ deviceId, ipAddress, location }));
 
     // Verify device exists
     const deviceRef = db.collection(`users/${userId}/devices`).doc(deviceId);
     const deviceDoc = await deviceRef.get();
 
     if (!deviceDoc.exists) {
+      logger.error(`[createSession] Device not found: ${deviceId} for user: ${userId}`);
       throw new HttpsError('not-found', 'Device not found. Please register device first.');
     }
+
+    logger.info(`[createSession] Device verified successfully: ${deviceId}`);
 
     const now = Timestamp.now();
     
     // Generate session ID (deviceId + timestamp for uniqueness)
     const sessionId = `${deviceId}_${now.seconds}`;
+    logger.info(`[createSession] Generated session ID: ${sessionId}`);
 
-    // Create session document
-    const sessionData: UserSession = {
+    // Create session document with only defined fields
+    const sessionData: Partial<UserSession> = {
       deviceId,
       loginAt: now,
       lastSeenAt: now,
-      ipAddress: ipAddress || undefined,
-      location: location || undefined,
     };
 
+    // Only add optional fields if they have actual values (not undefined/null)
+    if (ipAddress !== undefined && ipAddress !== null && ipAddress !== '') {
+      sessionData.ipAddress = ipAddress;
+    }
+    if (location !== undefined && location !== null && location !== '') {
+      sessionData.location = location;
+    }
+
+    logger.info(`[createSession] Session data to save:`, JSON.stringify(sessionData, null, 2));
+
     const sessionRef = db.collection(`users/${userId}/userSessions`).doc(sessionId);
-    await sessionRef.set(sessionData);
+    await sessionRef.set(sessionData as UserSession);
 
     // Update device lastSeenAt
     await deviceRef.update({
