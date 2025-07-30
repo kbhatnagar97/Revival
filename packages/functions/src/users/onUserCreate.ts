@@ -36,7 +36,12 @@ export const onUserCreate = onCall(callableFunctionOptions, async (request) => {
     logger.info(`Creating/updating user document for user: ${uid}`, {
       email: email || 'not provided',
       displayName: displayName || 'not provided',
-      provider: provider || 'not provided'
+      provider: provider || 'not provided',
+      authToken: {
+        email: request.auth.token.email,
+        name: request.auth.token.name,
+        signInProvider: request.auth.token.firebase?.sign_in_provider
+      }
     });
 
     // Get user email from auth token if not provided in data
@@ -47,9 +52,20 @@ export const onUserCreate = onCall(callableFunctionOptions, async (request) => {
     // Determine provider from auth token if not provided
     let userProvider: 'google.com' | 'password' = 'password';
     if (provider) {
-      userProvider = provider;
+      userProvider = provider === 'google.com' ? 'google.com' : 'password';
     } else if (request.auth.token.firebase?.sign_in_provider) {
       userProvider = request.auth.token.firebase.sign_in_provider === 'google.com' ? 'google.com' : 'password';
+    }
+
+    // Validate required fields
+    if (!userEmail) {
+      logger.error('No email provided for user creation', { uid, userData });
+      throw new HttpsError('invalid-argument', 'Email is required for user creation');
+    }
+
+    if (!userName) {
+      logger.error('No display name provided for user creation', { uid, userData });
+      throw new HttpsError('invalid-argument', 'Display name is required for user creation');
     }
 
     // Check if user document already exists

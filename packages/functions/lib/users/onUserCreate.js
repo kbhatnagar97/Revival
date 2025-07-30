@@ -11,7 +11,7 @@ const firebase_1 = require("../lib/firebase");
  * Follows DATABASE_SCHEMA.md specifications
  */
 exports.onUserCreate = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
-    var _a, _b;
+    var _a, _b, _c;
     try {
         // Check if user is authenticated
         if (!request.auth) {
@@ -24,7 +24,12 @@ exports.onUserCreate = (0, https_1.onCall)(config_1.callableFunctionOptions, asy
         firebase_functions_1.logger.info(`Creating/updating user document for user: ${uid}`, {
             email: email || 'not provided',
             displayName: displayName || 'not provided',
-            provider: provider || 'not provided'
+            provider: provider || 'not provided',
+            authToken: {
+                email: request.auth.token.email,
+                name: request.auth.token.name,
+                signInProvider: (_a = request.auth.token.firebase) === null || _a === void 0 ? void 0 : _a.sign_in_provider
+            }
         });
         // Get user email from auth token if not provided in data
         const userEmail = email || request.auth.token.email || '';
@@ -33,10 +38,19 @@ exports.onUserCreate = (0, https_1.onCall)(config_1.callableFunctionOptions, asy
         // Determine provider from auth token if not provided
         let userProvider = 'password';
         if (provider) {
-            userProvider = provider;
+            userProvider = provider === 'google.com' ? 'google.com' : 'password';
         }
-        else if ((_a = request.auth.token.firebase) === null || _a === void 0 ? void 0 : _a.sign_in_provider) {
+        else if ((_b = request.auth.token.firebase) === null || _b === void 0 ? void 0 : _b.sign_in_provider) {
             userProvider = request.auth.token.firebase.sign_in_provider === 'google.com' ? 'google.com' : 'password';
+        }
+        // Validate required fields
+        if (!userEmail) {
+            firebase_functions_1.logger.error('No email provided for user creation', { uid, userData });
+            throw new https_1.HttpsError('invalid-argument', 'Email is required for user creation');
+        }
+        if (!userName) {
+            firebase_functions_1.logger.error('No display name provided for user creation', { uid, userData });
+            throw new https_1.HttpsError('invalid-argument', 'Display name is required for user creation');
         }
         // Check if user document already exists
         const existingDoc = await firebase_1.db.collection('users').doc(uid).get();
@@ -74,7 +88,7 @@ exports.onUserCreate = (0, https_1.onCall)(config_1.callableFunctionOptions, asy
         firebase_functions_1.logger.error('Error in onUserCreate function:', {
             error: error instanceof Error ? error.message : String(error),
             stack: error instanceof Error ? error.stack : undefined,
-            uid: (_b = request.auth) === null || _b === void 0 ? void 0 : _b.uid,
+            uid: (_c = request.auth) === null || _c === void 0 ? void 0 : _c.uid,
             data: request.data
         });
         if (error instanceof https_1.HttpsError) {

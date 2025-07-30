@@ -61,6 +61,8 @@ export const authService = {
       await apiService.callFunction('onUserCreate', {
         email: userCredential.user.email,
         displayName: name,
+        provider: 'password',
+        photoURL: userCredential.user.photoURL,
       });
       console.log('User document created successfully');
     } catch (error) {
@@ -84,6 +86,8 @@ export const authService = {
       await apiService.callFunction('onUserCreate', {
         email: result.user.email,
         displayName: result.user.displayName,
+        provider: 'google.com',
+        photoURL: result.user.photoURL,
       });
       console.log('User document created/verified successfully');
     } catch (error) {
