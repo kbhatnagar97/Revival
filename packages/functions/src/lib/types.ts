@@ -60,3 +60,32 @@ export interface UserDocument {
   timezone: string;
   lastSeenAt: Timestamp;
 }
+
+export interface UserDeviceDocument {
+  // Device Identification (for display & debugging)
+  type: 'mobile' | 'web' | 'desktop'; // The client platform type
+  deviceModel?: string; // e.g., "iPhone 14 Pro", "Samsung Galaxy S23"
+  osName: string; // e.g., "iOS", "Android", "Windows", "macOS"
+  osVersion: string; // e.g., "16.2", "13"
+  fcmToken?: string; // Firebase Cloud Messaging token
+  lastSeenAt: Timestamp; // Heartbeat function 5 minutes
+  
+  // Status & Metadata
+  firstRegisteredAt: Timestamp; // When this device was first seen for this user
+}
+
+export interface UserSession {
+  // TTL (Time To Live) policy of 30 days
+  deviceId: string; // Links to UserDevice - used to track which device session belongs to
+  loginAt: Timestamp; // Session start time - set on AuthProvider login, shown in security log
+  lastSeenAt: Timestamp; // Heartbeat function 5 minutes
+  ipAddress?: string; // IP address of the user - used for security logging
+  location?: {
+    // Location of the user - used for security logging
+    city?: string; // City of the user - used for security logging
+    country?: string; // Country of the user - used for security logging
+    region?: string; // Region of the user - used for security logging
+    latitude?: number; // Latitude of the user - used for security logging
+    longitude?: number; // Longitude of the user - used for security logging
+  };
+}

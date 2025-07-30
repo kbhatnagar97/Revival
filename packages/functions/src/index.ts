@@ -23,3 +23,14 @@ export { recalculateSummary } from './habits/recalculateSummary';
 
 // Migration Functions (Schema Migration)
 export { migrateToDailyEntries, cleanupOldHabitEntries } from './migration/migrateToDaily Entries';
+
+// Device Management Functions (Phase 3)
+export { registerDevice } from './devices/registerDevice';
+export { getUserDevices } from './devices/getUserDevices';
+export { cleanupInactiveDevices } from './devices/cleanupInactiveDevices';
+
+// Session Management Functions (Phase 3)
+export { createSession } from './sessions/createSession';
+export { updateSessionHeartbeat } from './sessions/updateSessionHeartbeat';
+export { getUserSessions } from './sessions/getUserSessions';
+export { cleanupOldSessions } from './sessions/cleanupOldSessions';

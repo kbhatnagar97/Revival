@@ -1,7 +1,7 @@
 "use strict";
 // Core Cloud Functions as specified in CLOUD_FUNCTIONS_IMPLEMENTATION_PLAN.md
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cleanupOldHabitEntries = exports.migrateToDailyEntries = exports.recalculateSummary = exports.onHabitEntryWrite = exports.onHabitDelete = exports.onHabitUpdate = exports.deleteHabitEntry = exports.updateHabitEntry = exports.getHabitEntriesForHabit = exports.getHabitEntries = exports.deleteHabit = exports.updateHabit = exports.createHabit = exports.getUserHabits = exports.onUserCreate = void 0;
+exports.cleanupOldSessions = exports.getUserSessions = exports.updateSessionHeartbeat = exports.createSession = exports.cleanupInactiveDevices = exports.getUserDevices = exports.registerDevice = exports.cleanupOldHabitEntries = exports.migrateToDailyEntries = exports.recalculateSummary = exports.onHabitEntryWrite = exports.onHabitDelete = exports.onHabitUpdate = exports.deleteHabitEntry = exports.updateHabitEntry = exports.getHabitEntriesForHabit = exports.getHabitEntries = exports.deleteHabit = exports.updateHabit = exports.createHabit = exports.getUserHabits = exports.onUserCreate = void 0;
 // User Functions
 var onUserCreate_1 = require("./users/onUserCreate");
 Object.defineProperty(exports, "onUserCreate", { enumerable: true, get: function () { return onUserCreate_1.onUserCreate; } });
@@ -36,4 +36,20 @@ Object.defineProperty(exports, "recalculateSummary", { enumerable: true, get: fu
 var migrateToDaily_Entries_1 = require("./migration/migrateToDaily Entries");
 Object.defineProperty(exports, "migrateToDailyEntries", { enumerable: true, get: function () { return migrateToDaily_Entries_1.migrateToDailyEntries; } });
 Object.defineProperty(exports, "cleanupOldHabitEntries", { enumerable: true, get: function () { return migrateToDaily_Entries_1.cleanupOldHabitEntries; } });
+// Device Management Functions (Phase 3)
+var registerDevice_1 = require("./devices/registerDevice");
+Object.defineProperty(exports, "registerDevice", { enumerable: true, get: function () { return registerDevice_1.registerDevice; } });
+var getUserDevices_1 = require("./devices/getUserDevices");
+Object.defineProperty(exports, "getUserDevices", { enumerable: true, get: function () { return getUserDevices_1.getUserDevices; } });
+var cleanupInactiveDevices_1 = require("./devices/cleanupInactiveDevices");
+Object.defineProperty(exports, "cleanupInactiveDevices", { enumerable: true, get: function () { return cleanupInactiveDevices_1.cleanupInactiveDevices; } });
+// Session Management Functions (Phase 3)
+var createSession_1 = require("./sessions/createSession");
+Object.defineProperty(exports, "createSession", { enumerable: true, get: function () { return createSession_1.createSession; } });
+var updateSessionHeartbeat_1 = require("./sessions/updateSessionHeartbeat");
+Object.defineProperty(exports, "updateSessionHeartbeat", { enumerable: true, get: function () { return updateSessionHeartbeat_1.updateSessionHeartbeat; } });
+var getUserSessions_1 = require("./sessions/getUserSessions");
+Object.defineProperty(exports, "getUserSessions", { enumerable: true, get: function () { return getUserSessions_1.getUserSessions; } });
+var cleanupOldSessions_1 = require("./sessions/cleanupOldSessions");
+Object.defineProperty(exports, "cleanupOldSessions", { enumerable: true, get: function () { return cleanupOldSessions_1.cleanupOldSessions; } });
 //# sourceMappingURL=index.js.map
