@@ -8,40 +8,74 @@ import { UserDeviceDocument } from '../lib/types';
  * Register or update a user device for tracking and notifications
  */
 export const registerDevice = onCall(callableFunctionOptions, async (request) => {
-  // Check if user is authenticated
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  const userId = request.auth.uid;
-  const { 
-    deviceId, 
-    type, 
-    deviceModel, 
-    osName, 
-    osVersion, 
-    fcmToken 
-  } = request.data;
-
-  // Validate required fields
-  if (!deviceId || !type || !osName || !osVersion) {
-    throw new HttpsError('invalid-argument', 'Missing required fields: deviceId, type, osName, osVersion');
-  }
-
-  // Validate device type
-  if (!['mobile', 'web', 'desktop'].includes(type)) {
-    throw new HttpsError('invalid-argument', 'Invalid device type. Must be mobile, web, or desktop');
-  }
-
   try {
-    logger.info(`Registering device for user: ${userId}`, { deviceId, type, osName });
+    logger.info('=== REGISTER DEVICE START ===');
+    logger.info('Request auth:', {
+      uid: request.auth?.uid,
+      hasAuth: !!request.auth
+    });
+    logger.info('Request data received:', JSON.stringify(request.data, null, 2));
+
+    // Check if user is authenticated
+    if (!request.auth) {
+      logger.error('Authentication failed: No auth token');
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const userId = request.auth.uid;
+    logger.info(`Processing request for user: ${userId}`);
+
+    const {
+      deviceId,
+      type,
+      deviceModel,
+      osName,
+      osVersion,
+      fcmToken
+    } = request.data;
+
+    logger.info('Extracted fields:', {
+      deviceId: deviceId || 'MISSING',
+      type: type || 'MISSING',
+      deviceModel: deviceModel || 'undefined',
+      osName: osName || 'MISSING',
+      osVersion: osVersion || 'MISSING',
+      fcmToken: fcmToken ? 'PROVIDED' : 'undefined'
+    });
+
+    // Validate required fields
+    if (!deviceId || !type || !osName || !osVersion) {
+      const missingFields = [];
+      if (!deviceId) missingFields.push('deviceId');
+      if (!type) missingFields.push('type');
+      if (!osName) missingFields.push('osName');
+      if (!osVersion) missingFields.push('osVersion');
+      
+      logger.error('Validation failed - missing required fields:', missingFields);
+      throw new HttpsError('invalid-argument', `Missing required fields: ${missingFields.join(', ')}`);
+    }
+
+    // Validate device type
+    if (!['mobile', 'web', 'desktop'].includes(type)) {
+      logger.error('Validation failed - invalid device type:', type);
+      throw new HttpsError('invalid-argument', 'Invalid device type. Must be mobile, web, or desktop');
+    }
+
+    logger.info('Validation passed, proceeding with device registration');
 
     const deviceRef = db.collection(`users/${userId}/devices`).doc(deviceId);
+    logger.info('Device reference path:', `users/${userId}/devices/${deviceId}`);
+
+    logger.info('Checking if device exists...');
     const existingDevice = await deviceRef.get();
+    logger.info('Device exists check result:', { exists: existingDevice.exists });
 
     const now = Timestamp.now();
+    logger.info('Current timestamp:', now.toDate().toISOString());
 
     if (existingDevice.exists) {
+      logger.info('Updating existing device...');
+      
       // Update existing device
       const updateData: Partial<UserDeviceDocument> = {
         type,
@@ -54,16 +88,22 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
       if (deviceModel !== undefined) updateData.deviceModel = deviceModel;
       if (fcmToken !== undefined) updateData.fcmToken = fcmToken;
 
+      logger.info('Update data prepared:', JSON.stringify(updateData, null, 2));
+
       await deviceRef.update(updateData);
       
-      logger.info(`Updated existing device: ${deviceId} for user: ${userId}`);
-      return { 
-        success: true, 
+      logger.info(`Successfully updated existing device: ${deviceId} for user: ${userId}`);
+      const result = {
+        success: true,
         message: 'Device updated successfully',
         deviceId,
         isNew: false
       };
+      logger.info('Returning result:', JSON.stringify(result, null, 2));
+      return result;
     } else {
+      logger.info('Creating new device...');
+      
       // Create new device
       const deviceData: UserDeviceDocument = {
         type,
@@ -75,21 +115,35 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
         firstRegisteredAt: now,
       };
 
+      logger.info('Device data prepared:', JSON.stringify(deviceData, null, 2));
+
       await deviceRef.set(deviceData);
       
-      logger.info(`Registered new device: ${deviceId} for user: ${userId}`);
-      return { 
-        success: true, 
+      logger.info(`Successfully registered new device: ${deviceId} for user: ${userId}`);
+      const result = {
+        success: true,
         message: 'Device registered successfully',
         deviceId,
         isNew: true
       };
+      logger.info('Returning result:', JSON.stringify(result, null, 2));
+      return result;
     }
-  } catch (error) {
-    logger.error('Error registering device:', error);
+  } catch (error: any) {
+    logger.error('=== REGISTER DEVICE ERROR ===');
+    logger.error('Error type:', error?.constructor?.name);
+    logger.error('Error message:', error?.message);
+    logger.error('Error stack:', error?.stack);
+    logger.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    
     if (error instanceof HttpsError) {
+      logger.error('Re-throwing HttpsError:', { code: error.code, message: error.message });
       throw error;
     }
-    throw new HttpsError('internal', 'Failed to register device');
+    
+    logger.error('Throwing internal error');
+    throw new HttpsError('internal', `Failed to register device: ${error?.message || 'Unknown error'}`);
+  } finally {
+    logger.info('=== REGISTER DEVICE END ===');
   }
 });
