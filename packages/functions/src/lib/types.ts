@@ -30,6 +30,7 @@ export interface DailyEntry {
 
 export interface HabitEntryData {
   habitId: string;                 // Reference to habit document
+  habitName: string;               // Reference to habit document for readability
   count: number;                   // Number of completions for this day
   completed: boolean;              // Whether goal was met (count >= goalAtTime)
   goalAtTime: number;              // Goal when entry was created

@@ -79,6 +79,7 @@ export const updateHabitEntry = onCall(callableFunctionOptions, async (request) 
         const finalCount = count || 0;
         habitEntryData = {
           habitId,
+          habitName: habitData.name,
           count: finalCount,
           completed: completed !== undefined ? completed : finalCount >= habitData.goal,
           goalAtTime: habitData.goal,
@@ -100,6 +101,7 @@ export const updateHabitEntry = onCall(callableFunctionOptions, async (request) 
       const finalCount = count || 0;
       habitEntryData = {
         habitId,
+        habitName: habitData.name,
         count: finalCount,
         completed: completed !== undefined ? completed : finalCount >= habitData.goal,
         goalAtTime: habitData.goal,

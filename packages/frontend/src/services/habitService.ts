@@ -31,6 +31,7 @@ export interface Habit {
 export interface HabitEntry {
   id: string;                      // Generated ID combining date and habitId
   habitId: string;
+  habitName: string;               // Reference to habit document for readability
   date: string;                    // YYYY-MM-DD format
   count: number;
   completed: boolean;

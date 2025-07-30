@@ -60,6 +60,7 @@ export const migrateToDailyEntries = onCall(callableFunctionOptions, async (requ
         // Create habit entry data
         const habitEntryData: HabitEntryData = {
           habitId,
+          habitName: habitData.name || 'Unknown Habit',
           count: entryData.count || 0,
           completed: entryData.completed || false,
           goalAtTime: entryData.goalAtTime || habitData.goal || 1,
