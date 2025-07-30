@@ -84,9 +84,13 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
         lastSeenAt: now,
       };
 
-      // Update optional fields if provided
-      if (deviceModel !== undefined) updateData.deviceModel = deviceModel;
-      if (fcmToken !== undefined) updateData.fcmToken = fcmToken;
+      // Update optional fields if provided (only if they have actual values)
+      if (deviceModel !== undefined && deviceModel !== null) {
+        updateData.deviceModel = deviceModel;
+      }
+      if (fcmToken !== undefined && fcmToken !== null) {
+        updateData.fcmToken = fcmToken;
+      }
 
       logger.info('Update data prepared:', JSON.stringify(updateData, null, 2));
 
@@ -107,13 +111,19 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
       // Create new device
       const deviceData: UserDeviceDocument = {
         type,
-        deviceModel: deviceModel || undefined,
         osName,
         osVersion,
-        fcmToken: fcmToken || undefined,
         lastSeenAt: now,
         firstRegisteredAt: now,
       };
+
+      // Only add optional fields if they have actual values (not undefined)
+      if (deviceModel !== undefined && deviceModel !== null) {
+        deviceData.deviceModel = deviceModel;
+      }
+      if (fcmToken !== undefined && fcmToken !== null) {
+        deviceData.fcmToken = fcmToken;
+      }
 
       logger.info('Device data prepared:', JSON.stringify(deviceData, null, 2));
 
