@@ -263,6 +263,23 @@ const getDeviceCapabilities = async (): Promise<DeviceCapabilities> => {
   return capabilities;
 };
 
+const getNetworkInfo = async (): Promise<{ hostname?: string; isp?: string }> => {
+  try {
+    // Try to get network information from IP geolocation API
+    const response = await fetch('https://ipapi.co/json/');
+    const data = await response.json();
+    
+    return {
+      hostname: data.org || undefined, // Organization/ISP name
+      isp: data.org || undefined       // Same as hostname for now
+    };
+  } catch (error) {
+    console.warn('Failed to detect network info:', error);
+    // Return empty object with undefined values (will be omitted by Firestore)
+    return {};
+  }
+};
+
 const getEnhancedDeviceModel = (): string | undefined => {
   const userAgent = navigator.userAgent;
   
@@ -293,7 +310,10 @@ export const deviceService = {
    * Get current device information with enhanced detection
    */
   getCurrentDeviceInfo: async (userId: string): Promise<DeviceInfo> => {
-    const capabilities = await getDeviceCapabilities();
+    const [capabilities, network] = await Promise.all([
+      getDeviceCapabilities(),
+      getNetworkInfo()
+    ]);
     
     return {
       deviceId: getOrCreateDeviceId(),
@@ -304,11 +324,7 @@ export const deviceService = {
       hardware: getEnhancedHardwareInfo(),
       os: getEnhancedOSInfo(),
       capabilities,
-      network: {
-        // Network info will be populated server-side from IP
-        hostname: undefined,
-        isp: undefined
-      }
+      network
     };
   },
 
@@ -379,6 +395,7 @@ export const deviceService = {
       hardware: deviceInfo.hardware,
       os: deviceInfo.os,
       capabilities: deviceInfo.capabilities,
+      network: deviceInfo.network
     });
 
     // Store the current device info for future comparisons
@@ -387,6 +404,7 @@ export const deviceService = {
       os: deviceInfo.os,
       deviceModel: deviceInfo.deviceModel,
       hardware: deviceInfo.hardware,
+      network: deviceInfo.network,
       lastRegistered: new Date().toISOString()
     }));
 

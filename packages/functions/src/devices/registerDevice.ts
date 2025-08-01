@@ -32,7 +32,8 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
       fcmToken,
       hardware,
       os,
-      capabilities
+      capabilities,
+      network
     } = request.data;
 
     logger.info('Extracted fields:', {
@@ -42,17 +43,19 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
       fcmToken: fcmToken ? 'PROVIDED' : 'undefined',
       hardware: hardware ? 'PROVIDED' : 'MISSING',
       os: os ? 'PROVIDED' : 'MISSING',
-      capabilities: capabilities ? 'PROVIDED' : 'MISSING'
+      capabilities: capabilities ? 'PROVIDED' : 'MISSING',
+      network: network ? 'PROVIDED' : 'MISSING'
     });
 
     // Validate required fields
-    if (!deviceId || !type || !hardware || !os || !capabilities) {
+    if (!deviceId || !type || !hardware || !os || !capabilities || !network) {
       const missingFields = [];
       if (!deviceId) missingFields.push('deviceId');
       if (!type) missingFields.push('type');
       if (!hardware) missingFields.push('hardware');
       if (!os) missingFields.push('os');
       if (!capabilities) missingFields.push('capabilities');
+      if (!network) missingFields.push('network');
       
       logger.error('Validation failed - missing required fields:', missingFields);
       throw new HttpsError('invalid-argument', `Missing required fields: ${missingFields.join(', ')}`);
@@ -85,12 +88,8 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
         hardware,
         os,
         capabilities,
-        lastSeenAt: now,
-        network: {
-          // Network info will be populated server-side from IP
-          hostname: undefined,
-          isp: undefined
-        }
+        network,
+        lastSeenAt: now
       };
 
       // Update optional fields if provided (only if they have actual values)
@@ -123,13 +122,9 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
         hardware,
         os,
         capabilities,
+        network,
         lastSeenAt: now,
-        firstRegisteredAt: now,
-        network: {
-          // Network info will be populated server-side from IP
-          hostname: undefined,
-          isp: undefined
-        }
+        firstRegisteredAt: now
       };
 
       // Only add optional fields if they have actual values (not undefined)
