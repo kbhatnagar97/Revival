@@ -46,14 +46,56 @@ async function getHostnameFromIP(ipAddress: string): Promise<string | null> {
 
 // Helper function to get location and network info from IP address
 async function getLocationAndNetworkFromIP(ipAddress: string) {
+  // Fallback data
+  const fallbackData = {
+    location: {
+      country: 'Unknown',
+      countryCode: 'XX',
+      region: null,
+      city: null,
+      timezone: 'UTC',
+      timezoneOffset: 0
+    },
+    network: {
+      hostname: null,
+      isp: null,
+      asn: null
+    }
+  };
+
   try {
-    // Using a free IP geolocation service (in production, use a reliable paid service)
-    const response = await fetch(`http://ip-api.com/json/${ipAddress}?fields=status,country,countryCode,region,city,timezone,offset,isp,as,org`);
+    // Skip API call for local/unknown IPs
+    if (!ipAddress || ipAddress === 'unknown' || ipAddress === '127.0.0.1' || ipAddress === '::1' || ipAddress.startsWith('192.168.') || ipAddress.startsWith('10.') || ipAddress.startsWith('172.')) {
+      return fallbackData;
+    }
+
+    // Using a free IP geolocation service with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    const response = await fetch(`https://ip-api.com/json/${ipAddress}?fields=status,country,countryCode,region,city,timezone,offset,isp,as,org`, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Revival-App/1.0'
+      }
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const data = await response.json();
     
     if (data.status === 'success') {
-      // Get hostname via reverse DNS lookup
-      const hostname = await getHostnameFromIP(ipAddress);
+      // Get hostname via reverse DNS lookup (with error handling)
+      let hostname = null;
+      try {
+        hostname = await getHostnameFromIP(ipAddress);
+      } catch (error) {
+        // Ignore hostname lookup errors
+      }
       
       return {
         location: {
@@ -72,25 +114,10 @@ async function getLocationAndNetworkFromIP(ipAddress: string) {
       };
     }
   } catch (error) {
-    // Failed to get location and network from IP
+    console.warn('Failed to get location and network from IP:', error instanceof Error ? error.message : String(error));
   }
   
-  // Fallback data
-  return {
-    location: {
-      country: 'Unknown',
-      countryCode: 'XX',
-      region: null,
-      city: null,
-      timezone: 'UTC',
-      timezoneOffset: 0
-    },
-    network: {
-      hostname: null,
-      isp: null,
-      asn: null
-    }
-  };
+  return fallbackData;
 }
 
 export const createSessionEnhanced = onCall(
@@ -260,7 +287,16 @@ export const detectUserLocation = onCall(
 
     } catch (error) {
       console.error('Error detecting user location:', error);
-      throw new HttpsError('internal', 'Failed to detect location');
+      // Return fallback data instead of throwing error
+      return {
+        success: true,
+        country: 'Unknown',
+        countryCode: 'XX',
+        region: null,
+        city: null,
+        timezone: 'UTC',
+        timezoneOffset: 0
+      };
     }
   }
 );

@@ -6,6 +6,7 @@ export const callableFunctionOptions = {
   region: REGION,
   memory: '256MiB' as const,
   timeoutSeconds: 60,
+  cors: true,
 };
 
 // Function options for Firestore triggers

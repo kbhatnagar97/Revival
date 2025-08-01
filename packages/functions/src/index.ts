@@ -35,3 +35,9 @@ export { createSession } from './sessions/createSession';
 export { updateSessionHeartbeat } from './sessions/updateSessionHeartbeat';
 export { getUserSessions } from './sessions/getUserSessions';
 export { cleanupOldSessions } from './sessions/cleanupOldSessions';
+
+// Enhanced Session Functions
+export { createSessionEnhanced, detectUserLocation } from './sessions/createSessionEnhanced';
+
+// Privacy and Consent Functions
+export { storeConsentRecord, getConsentHistory, updateConsentPreferences, revokeConsent } from './privacy/consentManager';

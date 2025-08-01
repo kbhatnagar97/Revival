@@ -8,6 +8,7 @@ exports.callableFunctionOptions = {
     region: exports.REGION,
     memory: '256MiB',
     timeoutSeconds: 60,
+    cors: true,
 };
 // Function options for Firestore triggers
 exports.firestoreTriggerOptions = {
