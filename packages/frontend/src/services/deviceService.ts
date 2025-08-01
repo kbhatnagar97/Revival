@@ -1,5 +1,6 @@
 import { apiService } from './apiService';
 import { getTimezone, safeBase64Encode, safeSubstring, getScreenInfo } from '../utils/browserCompatibility';
+import { auth } from '../config/firebase';
 
 // Device type detection utilities
 const getDeviceType = (): 'mobile' | 'web' | 'desktop' => {
@@ -429,7 +430,11 @@ export const deviceService = {
    * Update FCM token for push notifications
    */
   updateFCMToken: async (fcmToken: string): Promise<void> => {
-    await deviceService.registerDeviceLegacy(fcmToken);
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    await deviceService.registerDevice(currentUser.uid, fcmToken);
     // FCM token updated successfully
   },
 

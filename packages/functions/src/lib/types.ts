@@ -65,14 +65,49 @@ export interface UserDocument {
 export interface UserDeviceDocument {
   // Device Identification (for display & debugging)
   type: 'mobile' | 'web' | 'desktop'; // The client platform type
-  deviceModel?: string; // e.g., "iPhone 14 Pro", "Samsung Galaxy S23"
-  osName: string; // e.g., "iOS", "Android", "Windows", "macOS"
-  osVersion: string; // e.g., "16.2", "13"
-  fcmToken?: string; // Firebase Cloud Messaging token
+  deviceModel?: string; // e.g., "iPhone 14 Pro", "Samsung Galaxy S23" (from device hardware)
+  fcmToken?: string; // Firebase Cloud Messaging token - used for push notifications
   lastSeenAt: Timestamp; // Heartbeat function 5 minutes
-  
+
   // Status & Metadata
-  firstRegisteredAt: Timestamp; // When this device was first seen for this user
+  firstRegisteredAt: Timestamp; // When this device was first seen for this user.
+
+  // Hardware specs (stable, auto-collectable)
+  hardware: {
+    screenResolution: string;           // "1920x1080"
+    pixelRatio: number;                 // 1, 2, 3
+    colorDepth: number;                 // 24, 32
+    touchSupport: boolean;
+    maxTouchPoints: number;
+    hardwareConcurrency: number;        // CPU cores
+  };
+  
+  // OS info (enhanced detection, no "unknown" values)
+  os: {
+    name: string;                       // "Windows", "macOS", "iOS", "Android"
+    version: string;                    // "10.0.19042", "14.2"
+  };
+  
+  // Device capabilities (auto-detectable)
+  capabilities: {
+    webGL: boolean;
+    canvas: boolean;
+    localStorage: boolean;
+    sessionStorage: boolean;
+    indexedDB: boolean;
+    serviceWorker: boolean;
+    pushNotifications: boolean;
+    geolocation: boolean;
+    camera: boolean;
+    microphone: boolean;
+    vibration: boolean;
+  };
+
+  // Network information (from IP reverse DNS lookup)
+  network: {
+    hostname?: string;                  // Reverse DNS lookup from IP
+    isp?: string;                       // Internet Service Provider
+  };
 }
 
 export interface UserSession {

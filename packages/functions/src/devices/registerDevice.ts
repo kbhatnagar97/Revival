@@ -29,27 +29,30 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
       deviceId,
       type,
       deviceModel,
-      osName,
-      osVersion,
-      fcmToken
+      fcmToken,
+      hardware,
+      os,
+      capabilities
     } = request.data;
 
     logger.info('Extracted fields:', {
       deviceId: deviceId || 'MISSING',
       type: type || 'MISSING',
       deviceModel: deviceModel || 'undefined',
-      osName: osName || 'MISSING',
-      osVersion: osVersion || 'MISSING',
-      fcmToken: fcmToken ? 'PROVIDED' : 'undefined'
+      fcmToken: fcmToken ? 'PROVIDED' : 'undefined',
+      hardware: hardware ? 'PROVIDED' : 'MISSING',
+      os: os ? 'PROVIDED' : 'MISSING',
+      capabilities: capabilities ? 'PROVIDED' : 'MISSING'
     });
 
     // Validate required fields
-    if (!deviceId || !type || !osName || !osVersion) {
+    if (!deviceId || !type || !hardware || !os || !capabilities) {
       const missingFields = [];
       if (!deviceId) missingFields.push('deviceId');
       if (!type) missingFields.push('type');
-      if (!osName) missingFields.push('osName');
-      if (!osVersion) missingFields.push('osVersion');
+      if (!hardware) missingFields.push('hardware');
+      if (!os) missingFields.push('os');
+      if (!capabilities) missingFields.push('capabilities');
       
       logger.error('Validation failed - missing required fields:', missingFields);
       throw new HttpsError('invalid-argument', `Missing required fields: ${missingFields.join(', ')}`);
@@ -79,9 +82,15 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
       // Update existing device
       const updateData: Partial<UserDeviceDocument> = {
         type,
-        osName,
-        osVersion,
+        hardware,
+        os,
+        capabilities,
         lastSeenAt: now,
+        network: {
+          // Network info will be populated server-side from IP
+          hostname: undefined,
+          isp: undefined
+        }
       };
 
       // Update optional fields if provided (only if they have actual values)
@@ -111,10 +120,16 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
       // Create new device
       const deviceData: UserDeviceDocument = {
         type,
-        osName,
-        osVersion,
+        hardware,
+        os,
+        capabilities,
         lastSeenAt: now,
         firstRegisteredAt: now,
+        network: {
+          // Network info will be populated server-side from IP
+          hostname: undefined,
+          isp: undefined
+        }
       };
 
       // Only add optional fields if they have actual values (not undefined)

@@ -106,16 +106,22 @@ const initializeDeviceAndSessionWithConsent = async (
     
     // Only initialize if consent allows or is not required
     if (hasValidConsent || !consentRequirements.required) {
-      // Register the device with enhanced data
-      await deviceService.registerDeviceLegacy();
-      console.log('Device registered successfully with enhanced data');
-      
-      // Initialize session tracking only if not already running
-      if (!sessionService.isHeartbeatRunning()) {
-        await sessionService.initializeSession();
-        console.log('Session tracking initialized successfully');
+      // Get current user for enhanced device registration
+      const currentUser = authService.getCurrentUser();
+      if (currentUser) {
+        // Register the device with enhanced data according to DATABASE_SCHEMA.md
+        await deviceService.registerDevice(currentUser.uid);
+        console.log('Device registered successfully with enhanced data');
+        
+        // Initialize session tracking only if not already running
+        if (!sessionService.isHeartbeatRunning()) {
+          await sessionService.initializeSession();
+          console.log('Session tracking initialized successfully');
+        } else {
+          console.log('Session heartbeat already running, skipping session initialization');
+        }
       } else {
-        console.log('Session heartbeat already running, skipping session initialization');
+        console.error('No authenticated user found for device registration');
       }
     } else {
       console.log('Skipping device/session initialization - consent required');
