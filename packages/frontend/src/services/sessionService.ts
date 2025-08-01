@@ -289,9 +289,11 @@ class SessionManager {
    */
   startHeartbeat(): void {
     if (this.heartbeatInterval) {
-      console.warn('Heartbeat is already running');
+      console.warn('Heartbeat is already running, skipping duplicate start');
       return;
     }
+
+    console.log('Starting session heartbeat...');
 
     // Send initial heartbeat
     this.updateHeartbeat();
@@ -301,7 +303,7 @@ class SessionManager {
       this.updateHeartbeat();
     }, this.HEARTBEAT_INTERVAL);
 
-    console.log('Session heartbeat started');
+    console.log('Session heartbeat started successfully');
   }
 
   /**
@@ -343,7 +345,15 @@ class SessionManager {
    * Initialize session on login
    */
   async initializeSession(): Promise<void> {
+    // Prevent duplicate initialization
+    if (this.heartbeatInterval) {
+      console.log('Session already initialized with active heartbeat, skipping');
+      return;
+    }
+
     try {
+      console.log('Initializing session...');
+      
       // Try to restore existing session first
       const restoredSessionId = this.loadSessionFromStorage();
       if (restoredSessionId) {
@@ -365,8 +375,10 @@ class SessionManager {
         await this.createSession();
       }
       
-      // Start heartbeat
-      this.startHeartbeat();
+      // Start heartbeat only if not already running
+      if (!this.heartbeatInterval) {
+        this.startHeartbeat();
+      }
       
       console.log('Session initialized successfully');
     } catch (error) {

@@ -1,4 +1,5 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { callableFunctionOptions } from '../lib/config';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { promisify } from 'util';
 import { reverse } from 'dns';
@@ -121,7 +122,7 @@ async function getLocationAndNetworkFromIP(ipAddress: string) {
 }
 
 export const createSessionEnhanced = onCall(
-  { cors: true },
+  callableFunctionOptions,
   async (request) => {
     // Verify authentication
     if (!request.auth) {
@@ -202,7 +203,7 @@ export const createSessionEnhanced = onCall(
 
 // Legacy function for backward compatibility
 export const createSession = onCall(
-  { cors: true },
+  callableFunctionOptions,
   async (request) => {
     // Verify authentication
     if (!request.auth) {
@@ -267,7 +268,7 @@ export const createSession = onCall(
 
 // Function to detect user location (for consent requirements)
 export const detectUserLocation = onCall(
-  { cors: true },
+  callableFunctionOptions,
   async (request) => {
     try {
       // Get client IP address

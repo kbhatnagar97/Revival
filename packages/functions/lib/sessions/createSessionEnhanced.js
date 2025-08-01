@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.detectUserLocation = exports.createSession = exports.createSessionEnhanced = void 0;
 const https_1 = require("firebase-functions/v2/https");
+const config_1 = require("../lib/config");
 const firestore_1 = require("firebase-admin/firestore");
 const util_1 = require("util");
 const dns_1 = require("dns");
@@ -88,7 +89,7 @@ async function getLocationAndNetworkFromIP(ipAddress) {
     }
     return fallbackData;
 }
-exports.createSessionEnhanced = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.createSessionEnhanced = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     var _a;
     // Verify authentication
     if (!request.auth) {
@@ -146,7 +147,7 @@ exports.createSessionEnhanced = (0, https_1.onCall)({ cors: true }, async (reque
     }
 });
 // Legacy function for backward compatibility
-exports.createSession = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.createSession = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     // Verify authentication
     if (!request.auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
@@ -196,7 +197,7 @@ exports.createSession = (0, https_1.onCall)({ cors: true }, async (request) => {
     }
 });
 // Function to detect user location (for consent requirements)
-exports.detectUserLocation = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.detectUserLocation = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     var _a;
     try {
         // Get client IP address

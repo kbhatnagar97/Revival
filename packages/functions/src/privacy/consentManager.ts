@@ -1,4 +1,5 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { callableFunctionOptions } from '../lib/config';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
 interface GDPRConsent {
@@ -22,7 +23,7 @@ interface StoreConsentRequest {
 }
 
 export const storeConsentRecord = onCall(
-  { cors: true },
+  callableFunctionOptions,
   async (request) => {
     // Verify authentication
     if (!request.auth) {
@@ -97,7 +98,7 @@ export const storeConsentRecord = onCall(
 );
 
 export const getConsentHistory = onCall(
-  { cors: true },
+  callableFunctionOptions,
   async (request) => {
     // Verify authentication
     if (!request.auth) {
@@ -137,7 +138,7 @@ export const getConsentHistory = onCall(
 );
 
 export const updateConsentPreferences = onCall(
-  { cors: true },
+  callableFunctionOptions,
   async (request) => {
     // Verify authentication
     if (!request.auth) {
@@ -209,7 +210,7 @@ export const updateConsentPreferences = onCall(
 );
 
 export const revokeConsent = onCall(
-  { cors: true },
+  callableFunctionOptions,
   async (request) => {
     // Verify authentication
     if (!request.auth) {

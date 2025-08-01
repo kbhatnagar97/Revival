@@ -2,8 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.revokeConsent = exports.updateConsentPreferences = exports.getConsentHistory = exports.storeConsentRecord = void 0;
 const https_1 = require("firebase-functions/v2/https");
+const config_1 = require("../lib/config");
 const firestore_1 = require("firebase-admin/firestore");
-exports.storeConsentRecord = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.storeConsentRecord = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     // Verify authentication
     if (!request.auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
@@ -58,7 +59,7 @@ exports.storeConsentRecord = (0, https_1.onCall)({ cors: true }, async (request)
         throw new https_1.HttpsError('internal', 'Failed to store consent record');
     }
 });
-exports.getConsentHistory = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.getConsentHistory = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     // Verify authentication
     if (!request.auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
@@ -85,7 +86,7 @@ exports.getConsentHistory = (0, https_1.onCall)({ cors: true }, async (request) 
         throw new https_1.HttpsError('internal', 'Failed to get consent history');
     }
 });
-exports.updateConsentPreferences = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.updateConsentPreferences = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     // Verify authentication
     if (!request.auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
@@ -142,7 +143,7 @@ exports.updateConsentPreferences = (0, https_1.onCall)({ cors: true }, async (re
         throw new https_1.HttpsError('internal', 'Failed to update consent preferences');
     }
 });
-exports.revokeConsent = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.revokeConsent = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     // Verify authentication
     if (!request.auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');

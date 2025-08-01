@@ -82,7 +82,25 @@ const convertFirebaseUser = (firebaseUser: FirebaseUser): User => {
 };
 
 // Helper function to initialize device and session tracking with consent checking
-const initializeDeviceAndSessionWithConsent = async (consentRequirements: ConsentRequirements) => {
+const initializeDeviceAndSessionWithConsent = async (
+  consentRequirements: ConsentRequirements,
+  isInitializing: boolean,
+  setIsInitializing: (value: boolean) => void
+) => {
+  // Prevent duplicate initialization
+  if (isInitializing) {
+    console.log('Device/session initialization already in progress, skipping');
+    return;
+  }
+
+  // Check if session is already running to avoid duplicates
+  if (sessionService.isHeartbeatRunning()) {
+    console.log('Session heartbeat already running, skipping initialization');
+    return;
+  }
+
+  setIsInitializing(true);
+  
   try {
     const hasValidConsent = consentService.hasValidConsent(consentRequirements);
     
@@ -92,15 +110,21 @@ const initializeDeviceAndSessionWithConsent = async (consentRequirements: Consen
       await deviceService.registerDeviceLegacy();
       console.log('Device registered successfully with enhanced data');
       
-      // Initialize session tracking
-      await sessionService.initializeSession();
-      console.log('Session tracking initialized successfully');
+      // Initialize session tracking only if not already running
+      if (!sessionService.isHeartbeatRunning()) {
+        await sessionService.initializeSession();
+        console.log('Session tracking initialized successfully');
+      } else {
+        console.log('Session heartbeat already running, skipping session initialization');
+      }
     } else {
       console.log('Skipping device/session initialization - consent required');
     }
   } catch (error) {
     console.error('Failed to initialize device and session tracking:', error);
     // Don't throw here - authentication succeeded, tracking is secondary
+  } finally {
+    setIsInitializing(false);
   }
 };
 
@@ -115,6 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [hasValidConsent, setHasValidConsent] = useState(false);
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [showConsentBanner, setShowConsentBanner] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
 
   useEffect(() => {
     // Listen to auth state changes
@@ -158,7 +183,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const isNewLogin = firebaseUser.metadata.creationTime === firebaseUser.metadata.lastSignInTime;
             if (!isNewLogin) {
               console.log('Existing user session detected, initializing enhanced tracking');
-              await initializeDeviceAndSessionWithConsent(requirements);
+              await initializeDeviceAndSessionWithConsent(requirements, isInitializing, setIsInitializing);
             }
           }
         } catch (error) {
@@ -169,7 +194,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             type: 'none',
             country: 'Unknown',
             countryCode: 'XX'
-          });
+          }, isInitializing, setIsInitializing);
         }
       } else {
         setUser(null);
@@ -261,7 +286,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setShowConsentBanner(false);
 
       // Initialize device and session tracking now that consent is given
-      await initializeDeviceAndSessionWithConsent(consentRequirements);
+      await initializeDeviceAndSessionWithConsent(consentRequirements, isInitializing, setIsInitializing);
       console.log('Consent stored and tracking initialized');
     } catch (error) {
       console.error('Failed to store consent:', error);
