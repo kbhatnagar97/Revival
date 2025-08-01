@@ -429,7 +429,7 @@ export const deviceService = {
    * Update FCM token for push notifications
    */
   updateFCMToken: async (userId: string, fcmToken: string): Promise<void> => {
-    await deviceService.registerDevice(userId, fcmToken, true);
+    await deviceService.registerDeviceLegacy(fcmToken);
     // FCM token updated successfully
   },
 

@@ -89,7 +89,7 @@ const initializeDeviceAndSessionWithConsent = async (userId: string, consentRequ
     // Only initialize if consent allows or is not required
     if (hasValidConsent || !consentRequirements.required) {
       // Register the device with enhanced data
-      await deviceService.registerDevice(userId);
+      await deviceService.registerDeviceLegacy();
       console.log('Device registered successfully with enhanced data');
       
       // Initialize session tracking
