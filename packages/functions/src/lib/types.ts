@@ -116,12 +116,44 @@ export interface UserSession {
   loginAt: Timestamp; // Session start time - set on AuthProvider login, shown in security log
   lastSeenAt: Timestamp; // Heartbeat function 5 minutes
   ipAddress?: string; // IP address of the user - used for security logging
-  location?: {
-    // Location of the user - used for security logging
-    city?: string; // City of the user - used for security logging
-    country?: string; // Country of the user - used for security logging
-    region?: string; // Region of the user - used for security logging
-    latitude?: number; // Latitude of the user - used for security logging
-    longitude?: number; // Longitude of the user - used for security logging
+
+  // Enhanced browser context (changes frequently)
+  browser: {
+    name: string;                       // "Chrome", "Safari"
+    version: string;                    // "120.0.6099.109"
+    engine: string;                     // "Blink", "Gecko"
+    userAgent: string;
+    language: string;                   // "en-US"
+    languages: string[];                // ["en-US", "en"]
+    platform: string;                  // "Win32", "MacIntel"
+    cookiesEnabled: boolean;
+    doNotTrack: boolean;
+  };
+  
+  // Dynamic display state
+  orientation: 'portrait' | 'landscape';
+  
+  // Enhanced location (IP-based, can change per session)
+  location: {
+    ipAddress: string;                  // Store IP as-is for accuracy
+    country: string;                    // "India", "United States"
+    countryCode: string;                // "IN", "US" (for consent logic)
+    region?: string;                    // "Maharashtra"
+    city?: string;                      // "Mumbai"
+    timezone: string;                   // "Asia/Kolkata"
+    timezoneOffset: number;             // -330
+  };
+  
+  // Security context (can vary per session)
+  security: {
+    httpsSupport: boolean;
+    secureContext: boolean;
+  };
+
+  // Network information (from IP reverse DNS lookup per session)
+  network: {
+    hostname?: string;                  // Reverse DNS lookup from IP
+    isp?: string;                       // Internet Service Provider
+    asn?: string;                       // Autonomous System Number
   };
 }

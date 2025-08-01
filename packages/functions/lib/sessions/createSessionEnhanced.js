@@ -127,11 +127,17 @@ exports.createSessionEnhanced = (0, https_1.onCall)(config_1.callableFunctionOpt
             ipAddress,
             browser,
             orientation,
-            location: Object.assign({ ipAddress }, locationData),
+            location: {
+                ipAddress,
+                country: locationData.country,
+                countryCode: locationData.countryCode,
+                region: locationData.region,
+                city: locationData.city,
+                timezone: locationData.timezone,
+                timezoneOffset: locationData.timezoneOffset
+            },
             security,
-            network: networkData,
-            createdAt: now,
-            updatedAt: now
+            network: networkData
         };
         await sessionRef.set(sessionData);
         // Enhanced session created successfully

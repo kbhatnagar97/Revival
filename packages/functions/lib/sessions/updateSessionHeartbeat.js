@@ -15,7 +15,7 @@ exports.updateSessionHeartbeat = (0, https_1.onCall)(config_1.callableFunctionOp
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
     }
     const userId = request.auth.uid;
-    const { sessionId, deviceId } = request.data;
+    const { sessionId, deviceId, orientation } = request.data;
     // Validate required fields
     if (!sessionId || !deviceId) {
         throw new https_1.HttpsError('invalid-argument', 'Missing required fields: sessionId, deviceId');
@@ -29,9 +29,15 @@ exports.updateSessionHeartbeat = (0, https_1.onCall)(config_1.callableFunctionOp
         if (!sessionDoc.exists) {
             throw new https_1.HttpsError('not-found', 'Session not found');
         }
-        await sessionRef.update({
+        // Prepare update data
+        const updateData = {
             lastSeenAt: now,
-        });
+        };
+        // Update orientation if provided
+        if (orientation) {
+            updateData.orientation = orientation;
+        }
+        await sessionRef.update(updateData);
         // Also update device lastSeenAt
         const deviceRef = firebase_1.db.collection(`users/${userId}/devices`).doc(deviceId);
         await deviceRef.update({

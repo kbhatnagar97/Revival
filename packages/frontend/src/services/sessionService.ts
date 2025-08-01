@@ -1,5 +1,6 @@
 import { apiService } from './apiService';
 import { deviceService } from './deviceService';
+import { authService } from './authService';
 
 export interface BrowserInfo {
   name: string;
@@ -193,13 +194,19 @@ class SessionManager {
    * Create a new session
    */
   async createSession(): Promise<{ success: boolean; sessionId: string }> {
+    // Check if user is authenticated
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser) {
+      throw new Error('User must be authenticated to create session');
+    }
+
     try {
       const deviceId = deviceService.getDeviceId();
       const browserInfo = this.getBrowserInfo();
       const orientation = this.getOrientation();
       const security = this.getSecurityContext();
       
-      const result = await apiService.callFunction<{ success: boolean; sessionId: string }>('createSession', {
+      const result = await apiService.callFunction<{ success: boolean; sessionId: string }>('createSessionEnhanced', {
         deviceId,
         browser: browserInfo,
         orientation,
@@ -221,6 +228,13 @@ class SessionManager {
    * Update session heartbeat
    */
   async updateHeartbeat(): Promise<void> {
+    // Check if user is authenticated
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser) {
+      console.log('User not authenticated, skipping heartbeat update');
+      return;
+    }
+
     // Try to restore session if we don't have one
     if (!this.currentSessionId) {
       const restoredSessionId = this.loadSessionFromStorage();
@@ -345,6 +359,13 @@ class SessionManager {
    * Initialize session on login
    */
   async initializeSession(): Promise<void> {
+    // Check if user is authenticated
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser) {
+      console.log('User not authenticated, skipping session initialization');
+      return;
+    }
+
     // Prevent duplicate initialization
     if (this.heartbeatInterval) {
       console.log('Session already initialized with active heartbeat, skipping');
@@ -391,6 +412,13 @@ class SessionManager {
    * Handle page visibility changes to optimize heartbeat
    */
   handleVisibilityChange(): void {
+    // Check if user is authenticated before handling visibility changes
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser) {
+      console.log('User not authenticated, skipping visibility change handling');
+      return;
+    }
+
     if (document.hidden) {
       // Page is hidden, we might want to reduce heartbeat frequency
       // For now, we'll keep the same interval

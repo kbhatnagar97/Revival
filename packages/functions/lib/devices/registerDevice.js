@@ -24,26 +24,32 @@ exports.registerDevice = (0, https_1.onCall)(config_1.callableFunctionOptions, a
         }
         const userId = request.auth.uid;
         firebase_functions_1.logger.info(`Processing request for user: ${userId}`);
-        const { deviceId, type, deviceModel, osName, osVersion, fcmToken } = request.data;
+        const { deviceId, type, deviceModel, fcmToken, hardware, os, capabilities, network } = request.data;
         firebase_functions_1.logger.info('Extracted fields:', {
             deviceId: deviceId || 'MISSING',
             type: type || 'MISSING',
             deviceModel: deviceModel || 'undefined',
-            osName: osName || 'MISSING',
-            osVersion: osVersion || 'MISSING',
-            fcmToken: fcmToken ? 'PROVIDED' : 'undefined'
+            fcmToken: fcmToken ? 'PROVIDED' : 'undefined',
+            hardware: hardware ? 'PROVIDED' : 'MISSING',
+            os: os ? 'PROVIDED' : 'MISSING',
+            capabilities: capabilities ? 'PROVIDED' : 'MISSING',
+            network: network ? 'PROVIDED' : 'MISSING'
         });
         // Validate required fields
-        if (!deviceId || !type || !osName || !osVersion) {
+        if (!deviceId || !type || !hardware || !os || !capabilities || !network) {
             const missingFields = [];
             if (!deviceId)
                 missingFields.push('deviceId');
             if (!type)
                 missingFields.push('type');
-            if (!osName)
-                missingFields.push('osName');
-            if (!osVersion)
-                missingFields.push('osVersion');
+            if (!hardware)
+                missingFields.push('hardware');
+            if (!os)
+                missingFields.push('os');
+            if (!capabilities)
+                missingFields.push('capabilities');
+            if (!network)
+                missingFields.push('network');
             firebase_functions_1.logger.error('Validation failed - missing required fields:', missingFields);
             throw new https_1.HttpsError('invalid-argument', `Missing required fields: ${missingFields.join(', ')}`);
         }
@@ -65,9 +71,11 @@ exports.registerDevice = (0, https_1.onCall)(config_1.callableFunctionOptions, a
             // Update existing device
             const updateData = {
                 type,
-                osName,
-                osVersion,
-                lastSeenAt: now,
+                hardware,
+                os,
+                capabilities,
+                network,
+                lastSeenAt: now
             };
             // Update optional fields if provided (only if they have actual values)
             if (deviceModel !== undefined && deviceModel !== null) {
@@ -93,10 +101,12 @@ exports.registerDevice = (0, https_1.onCall)(config_1.callableFunctionOptions, a
             // Create new device
             const deviceData = {
                 type,
-                osName,
-                osVersion,
+                hardware,
+                os,
+                capabilities,
+                network,
                 lastSeenAt: now,
-                firstRegisteredAt: now,
+                firstRegisteredAt: now
             };
             // Only add optional fields if they have actual values (not undefined)
             if (deviceModel !== undefined && deviceModel !== null) {

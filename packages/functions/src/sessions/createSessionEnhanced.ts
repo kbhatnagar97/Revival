@@ -176,12 +176,15 @@ export const createSessionEnhanced = onCall(
         orientation,
         location: {
           ipAddress,
-          ...locationData
+          country: locationData.country,
+          countryCode: locationData.countryCode,
+          region: locationData.region,
+          city: locationData.city,
+          timezone: locationData.timezone,
+          timezoneOffset: locationData.timezoneOffset
         },
         security,
-        network: networkData,
-        createdAt: now,
-        updatedAt: now
+        network: networkData
       };
 
       await sessionRef.set(sessionData);

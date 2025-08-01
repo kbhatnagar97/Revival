@@ -14,7 +14,7 @@ export const updateSessionHeartbeat = onCall(callableFunctionOptions, async (req
   }
 
   const userId = request.auth.uid;
-  const { sessionId, deviceId } = request.data;
+  const { sessionId, deviceId, orientation } = request.data;
 
   // Validate required fields
   if (!sessionId || !deviceId) {
@@ -34,9 +34,17 @@ export const updateSessionHeartbeat = onCall(callableFunctionOptions, async (req
       throw new HttpsError('not-found', 'Session not found');
     }
 
-    await sessionRef.update({
+    // Prepare update data
+    const updateData: any = {
       lastSeenAt: now,
-    });
+    };
+
+    // Update orientation if provided
+    if (orientation) {
+      updateData.orientation = orientation;
+    }
+
+    await sessionRef.update(updateData);
 
     // Also update device lastSeenAt
     const deviceRef = db.collection(`users/${userId}/devices`).doc(deviceId);
