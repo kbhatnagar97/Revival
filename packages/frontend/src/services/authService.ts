@@ -18,10 +18,10 @@ import { sessionService } from './sessionService';
 const googleProvider = new GoogleAuthProvider();
 
 // Helper function to initialize device and session tracking
-const initializeDeviceAndSession = async () => {
+const initializeDeviceAndSession = async (userId: string) => {
   try {
     // Register the device
-    await deviceService.registerDevice();
+    await deviceService.registerDevice(userId);
     console.log('Device registered successfully');
     
     // Initialize session tracking
@@ -39,7 +39,7 @@ export const authService = {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     
     // Initialize device and session tracking
-    await initializeDeviceAndSession();
+    await initializeDeviceAndSession(userCredential.user.uid);
     
     return userCredential.user;
   },
@@ -71,7 +71,7 @@ export const authService = {
     }
     
     // Initialize device and session tracking
-    await initializeDeviceAndSession();
+    await initializeDeviceAndSession(userCredential.user.uid);
     
     return userCredential.user;
   },
@@ -96,7 +96,7 @@ export const authService = {
     }
     
     // Initialize device and session tracking
-    await initializeDeviceAndSession();
+    await initializeDeviceAndSession(result.user.uid);
     
     return result.user;
   },

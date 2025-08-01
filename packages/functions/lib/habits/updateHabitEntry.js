@@ -62,6 +62,7 @@ exports.updateHabitEntry = (0, https_1.onCall)(config_1.callableFunctionOptions,
                 const finalCount = count || 0;
                 habitEntryData = {
                     habitId,
+                    habitName: habitData.name,
                     count: finalCount,
                     completed: completed !== undefined ? completed : finalCount >= habitData.goal,
                     goalAtTime: habitData.goal,
@@ -82,6 +83,7 @@ exports.updateHabitEntry = (0, https_1.onCall)(config_1.callableFunctionOptions,
             const finalCount = count || 0;
             habitEntryData = {
                 habitId,
+                habitName: habitData.name,
                 count: finalCount,
                 completed: completed !== undefined ? completed : finalCount >= habitData.goal,
                 goalAtTime: habitData.goal,

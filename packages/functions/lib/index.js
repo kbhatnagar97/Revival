@@ -1,7 +1,7 @@
 "use strict";
 // Core Cloud Functions as specified in CLOUD_FUNCTIONS_IMPLEMENTATION_PLAN.md
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cleanupOldSessions = exports.getUserSessions = exports.updateSessionHeartbeat = exports.createSession = exports.cleanupInactiveDevices = exports.getUserDevices = exports.registerDevice = exports.cleanupOldHabitEntries = exports.migrateToDailyEntries = exports.recalculateSummary = exports.onHabitEntryWrite = exports.onHabitDelete = exports.onHabitUpdate = exports.deleteHabitEntry = exports.updateHabitEntry = exports.getHabitEntriesForHabit = exports.getHabitEntries = exports.deleteHabit = exports.updateHabit = exports.createHabit = exports.getUserHabits = exports.onUserCreate = void 0;
+exports.cleanupOldSessions = exports.getUserSessions = exports.updateSessionHeartbeat = exports.createSession = exports.cleanupInactiveDevices = exports.getUserDevices = exports.registerDevice = exports.cleanupOldHabitEntries = exports.migrateToDailyEntries = exports.recalculateSummary = exports.onHabitEntryWrite = exports.onHabitDelete = exports.onHabitUpdate = exports.deleteHabitEntry = exports.updateHabitEntry = exports.getHabitEntriesForHabit = exports.getHabitEntries = exports.reorderHabits = exports.deleteHabit = exports.updateHabit = exports.createHabit = exports.getUserHabits = exports.onUserCreate = void 0;
 // User Functions
 var onUserCreate_1 = require("./users/onUserCreate");
 Object.defineProperty(exports, "onUserCreate", { enumerable: true, get: function () { return onUserCreate_1.onUserCreate; } });
@@ -14,6 +14,8 @@ var updateHabit_1 = require("./habits/updateHabit");
 Object.defineProperty(exports, "updateHabit", { enumerable: true, get: function () { return updateHabit_1.updateHabit; } });
 var deleteHabit_1 = require("./habits/deleteHabit");
 Object.defineProperty(exports, "deleteHabit", { enumerable: true, get: function () { return deleteHabit_1.deleteHabit; } });
+var reorderHabits_1 = require("./habits/reorderHabits");
+Object.defineProperty(exports, "reorderHabits", { enumerable: true, get: function () { return reorderHabits_1.reorderHabits; } });
 // Habit Entry CRUD Functions (Callable)
 var getHabitEntries_1 = require("./habits/getHabitEntries");
 Object.defineProperty(exports, "getHabitEntries", { enumerable: true, get: function () { return getHabitEntries_1.getHabitEntries; } });

@@ -5,6 +5,11 @@ import React, {
   type ReactNode,
 } from 'react';
 import { authService } from '../../services/authService';
+import { deviceService } from '../../services/deviceService';
+import { sessionService } from '../../services/sessionService';
+import { consentService, type ConsentRequirements, type GDPRConsent, type CCPAConsent } from '../../services/consentService';
+import { ConsentModal } from '../components/ConsentModal';
+import { ConsentBanner } from '../components/ConsentBanner';
 import type { User as FirebaseUser } from 'firebase/auth';
 
 interface User {
@@ -18,6 +23,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  consentRequirements: ConsentRequirements | null;
+  hasValidConsent: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (
@@ -27,6 +34,7 @@ interface AuthContextType {
   ) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  storeConsent: (consent: GDPRConsent | CCPAConsent) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,6 +81,29 @@ const convertFirebaseUser = (firebaseUser: FirebaseUser): User => {
   };
 };
 
+// Helper function to initialize device and session tracking with consent checking
+const initializeDeviceAndSessionWithConsent = async (userId: string, consentRequirements: ConsentRequirements) => {
+  try {
+    const hasValidConsent = consentService.hasValidConsent(consentRequirements);
+    
+    // Only initialize if consent allows or is not required
+    if (hasValidConsent || !consentRequirements.required) {
+      // Register the device with enhanced data
+      await deviceService.registerDevice(userId);
+      console.log('Device registered successfully with enhanced data');
+      
+      // Initialize session tracking
+      await sessionService.initializeSession();
+      console.log('Session tracking initialized successfully');
+    } else {
+      console.log('Skipping device/session initialization - consent required');
+    }
+  } catch (error) {
+    console.error('Failed to initialize device and session tracking:', error);
+    // Don't throw here - authentication succeeded, tracking is secondary
+  }
+};
+
 interface AuthProviderProps {
   children: ReactNode;
 }
@@ -80,6 +111,10 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [consentRequirements, setConsentRequirements] = useState<ConsentRequirements | null>(null);
+  const [hasValidConsent, setHasValidConsent] = useState(false);
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [showConsentBanner, setShowConsentBanner] = useState(false);
 
   useEffect(() => {
     // Listen to auth state changes
@@ -102,8 +137,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         const convertedUser = convertFirebaseUser(firebaseUser);
         setUser(convertedUser);
+
+        // Check consent requirements
+        try {
+          const requirements = await consentService.detectConsentRequirements();
+          const hasConsent = consentService.hasValidConsent(requirements);
+          
+          setConsentRequirements(requirements);
+          setHasValidConsent(hasConsent);
+
+          // Show consent UI if required and not already given
+          if (requirements.required && !hasConsent) {
+            if (requirements.type === 'gdpr') {
+              setShowConsentModal(true);
+            } else if (requirements.type === 'ccpa') {
+              setShowConsentBanner(true);
+            }
+          } else {
+            // Initialize device and session tracking
+            const isNewLogin = firebaseUser.metadata.creationTime === firebaseUser.metadata.lastSignInTime;
+            if (!isNewLogin) {
+              console.log('Existing user session detected, initializing enhanced tracking');
+              await initializeDeviceAndSessionWithConsent(firebaseUser.uid, requirements);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to check consent requirements:', error);
+          // Fallback to basic initialization without consent
+          await initializeDeviceAndSessionWithConsent(firebaseUser.uid, {
+            required: false,
+            type: 'none',
+            country: 'Unknown',
+            countryCode: 'XX'
+          });
+        }
       } else {
         setUser(null);
+        setConsentRequirements(null);
+        setHasValidConsent(false);
+        setShowConsentModal(false);
+        setShowConsentBanner(false);
+        // Clear session tracking when user logs out
+        sessionService.clearSession();
       }
       setIsLoading(false);
     });
@@ -174,15 +249,69 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const storeConsent = async (consent: GDPRConsent | CCPAConsent) => {
+    if (!consentRequirements || !user) {
+      throw new Error('No consent requirements or user found');
+    }
+
+    try {
+      await consentService.storeConsent(consentRequirements, consent);
+      setHasValidConsent(true);
+      setShowConsentModal(false);
+      setShowConsentBanner(false);
+
+      // Initialize device and session tracking now that consent is given
+      await initializeDeviceAndSessionWithConsent(user.id, consentRequirements);
+      console.log('Consent stored and tracking initialized');
+    } catch (error) {
+      console.error('Failed to store consent:', error);
+      throw error;
+    }
+  };
+
+  const handleConsentDecline = () => {
+    setShowConsentModal(false);
+    setShowConsentBanner(false);
+    // User can still use the app but with limited tracking
+    console.log('User declined consent - limited tracking mode');
+  };
+
+  const handleLearnMore = () => {
+    // Open privacy policy or more detailed consent information
+    window.open('/privacy-policy', '_blank');
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
+    consentRequirements,
+    hasValidConsent,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
     signOut,
     resetPassword,
+    storeConsent,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      
+      {/* Consent UI Components */}
+      <ConsentModal
+        isOpen={showConsentModal}
+        onAccept={storeConsent}
+        onDecline={handleConsentDecline}
+        country={consentRequirements?.country || 'Unknown'}
+      />
+      
+      <ConsentBanner
+        isVisible={showConsentBanner}
+        onAccept={storeConsent}
+        onLearnMore={handleLearnMore}
+        region={consentRequirements?.country || 'Unknown'}
+      />
+    </AuthContext.Provider>
+  );
 };

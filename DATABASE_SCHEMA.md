@@ -35,17 +35,52 @@ interface UserDocument {
 ### **2. users/{userId}/devices/{deviceId} - UserDeviceDocument**
 
 ```typescript
-interface UserDeviceDocument {
+interface UserDeviceDocument {  
   // Device Identification (for display & debugging)
   type: 'mobile' | 'web' | 'desktop'; // The client platform type
   deviceModel?: string; // e.g., "iPhone 14 Pro", "Samsung Galaxy S23" (from device hardware)
-  osName: string; // e.g., "iOS", "Android", "Windows", "macOS"
-  osVersion: string; // e.g., "16.2", "13"
   fcmToken?: string; // Firebase Cloud Messaging token - used for push notifications
   lastSeenAt: Timestamp; // Heartbeat function 5 minutes
 
   // Status & Metadata
   firstRegisteredAt: Timestamp; // When this device was first seen for this user.
+
+  // Hardware specs (stable, auto-collectable)
+  hardware: {
+    screenResolution: string;           // "1920x1080"
+    pixelRatio: number;                 // 1, 2, 3
+    colorDepth: number;                 // 24, 32
+    touchSupport: boolean;
+    maxTouchPoints: number;
+    hardwareConcurrency: number;        // CPU cores
+  };
+  
+  // OS info (enhanced detection, no "unknown" values)
+  os: {
+    name: string;                       // "Windows", "macOS", "iOS", "Android"
+    version: string;                    // "10.0.19042", "14.2"
+  };
+  
+  // Device capabilities (auto-detectable)
+  capabilities: {
+    webGL: boolean;
+    canvas: boolean;
+    localStorage: boolean;
+    sessionStorage: boolean;
+    indexedDB: boolean;
+    serviceWorker: boolean;
+    pushNotifications: boolean;
+    geolocation: boolean;
+    camera: boolean;
+    microphone: boolean;
+    vibration: boolean;
+  };
+
+  // Network information (from IP reverse DNS lookup)
+  network: {
+    hostname?: string;                  // Reverse DNS lookup from IP
+    isp?: string;                       // Internet Service Provider
+  };
 }
 ```
 
@@ -96,6 +131,7 @@ interface DailyEntry {
 
 interface HabitEntryData {
   habitId: string; // Reference to habit document - used for joining habit metadata
+  habitName: string; // Reference to habit document for readibility
   count: number; // Number of completions for this day - displayed in UI counters
   completed: boolean; // Whether goal was met (count >= goalAtTime) - used for streak calculation
   goalAtTime: number; // Goal when entry was created - preserves historical accuracy for analytics
@@ -114,13 +150,236 @@ interface UserSession {
   loginAt: Timestamp; // Session start time - set on AuthProvider login, shown in security log
   lastSeenAt: Timestamp; // Heartbeat function 5 minutes
   ipAddress?: string; // IP address of the user - used for security logging
-  location?: {
-    // Location of the user - used for security logging
-    city?: string; // City of the user - used for security logging
-    country?: string; // Country of the user - used for security logging
-    region?: string; // Region of the user - used for security logging
-    latitude?: number; // Latitude of the user - used for security logging
-    longitude?: number; // Longitude of the user - used for security logging
+
+  // Enhanced browser context (changes frequently)
+  browser: {
+    name: string;                       // "Chrome", "Safari"
+    version: string;                    // "120.0.6099.109"
+    engine: string;                     // "Blink", "Gecko"
+    userAgent: string;
+    language: string;                   // "en-US"
+    languages: string[];                // ["en-US", "en"]
+    platform: string;                  // "Win32", "MacIntel"
+    cookiesEnabled: boolean;
+    doNotTrack: boolean;
+  };
+  
+  // Dynamic display state
+  orientation: 'portrait' | 'landscape';
+  
+  // Enhanced location (IP-based, can change per session)
+  location: {
+    ipAddress: string;                  // Store IP as-is for accuracy
+    country: string;                    // "India", "United States"
+    countryCode: string;                // "IN", "US" (for consent logic)
+    region?: string;                    // "Maharashtra"
+    city?: string;                      // "Mumbai"
+    timezone: string;                   // "Asia/Kolkata"
+    timezoneOffset: number;             // -330
+  };
+  
+  // Security context (can vary per session)
+  security: {
+    httpsSupport: boolean;
+    secureContext: boolean;
+  };
+
+  // Network information (from IP reverse DNS lookup per session)
+  network: {
+    hostname?: string;                  // Reverse DNS lookup from IP
+    isp?: string;                       // Internet Service Provider
+    asn?: string;                       // Autonomous System Number
   };
 }
 ```
+---
+
+## **Privacy Compliance & Consent Management**
+
+### **Location-Based Consent Requirements**
+
+**Consent Required Locations:**
+- **EU (GDPR)**: All 27 EU member states
+- **California (CCPA)**: US state of California only
+
+**No Consent Required:**
+- **India**: No consent prompts - collect all data automatically
+- **Rest of World**: No consent prompts - collect all data automatically
+
+### **Minimum Compliance Requirements**
+
+#### **EU (GDPR) - Subtle Consent**
+```typescript
+interface GDPRConsent {
+  deviceFingerprinting: boolean;      // "Device information for security"
+  locationTracking: boolean;          // "General location for personalization"
+  analyticsTracking: boolean;         // "Usage analytics for app improvement"
+}
+```
+
+**Required Disclosures:**
+- Device hardware specs collection
+- Browser information tracking
+- IP-based location detection
+- Session behavior analytics
+
+#### **California (CCPA) - Minimal Consent**
+```typescript
+interface CCPAConsent {
+  personalDataCollection: boolean;    // "Personal information collection"
+  dataSharing: boolean;              // "Data sharing with service providers"
+}
+```
+
+**Required Disclosures:**
+- Personal information collection (device ID, location)
+- Data sharing with analytics providers
+- Right to opt-out available
+
+### **Consent UI Design - Revival Theme**
+
+#### **EU Consent Modal**
+```scss
+.consent-modal {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  
+  .consent-header {
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  
+  .consent-options {
+    .option-card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      
+      .toggle-switch {
+        accent-color: #667eea;
+      }
+    }
+  }
+  
+  .consent-buttons {
+    .accept-btn {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-weight: 600;
+    }
+    
+    .decline-btn {
+      background: transparent;
+      color: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      padding: 12px 24px;
+    }
+  }
+}
+```
+
+#### **California Consent Banner**
+```scss
+.ccpa-banner {
+  background: rgba(102, 126, 234, 0.95);
+  backdrop-filter: blur(8px);
+  border-top: 2px solid #667eea;
+  padding: 16px;
+  
+  .banner-text {
+    color: #ffffff;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  .banner-actions {
+    .accept-btn {
+      background: #ffffff;
+      color: #667eea;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-weight: 600;
+      margin-right: 12px;
+    }
+    
+    .learn-more {
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: underline;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+  }
+}
+```
+
+---
+
+## **Implementation Action Plan**
+
+### **Phase 1: Foundation Setup (Week 1)**
+1. **Extend existing services** - enhance `deviceService.ts` and `sessionService.ts`
+2. **Add consent detection** - create `consentService.ts` using existing location detection
+3. **Update existing hooks** - enhance `useDeviceSession.ts` with new fields
+4. **Database migration** - add new fields to existing Firestore collections
+
+### **Phase 2: Data Collection Enhancement (Week 2)**
+1. **Enhance device registration** - extend existing `registerDevice` function
+2. **Upgrade session creation** - extend existing `createSession` function  
+3. **Add capability detection** - integrate with existing browser compatibility utils
+4. **Location enhancement** - extend existing IP detection in cloud functions
+
+### **Phase 3: Consent Integration (Week 3)**
+1. **Location-based consent** - integrate with existing `AuthProvider.tsx`
+2. **Consent UI components** - add to existing `common/components/`
+3. **Consent state management** - extend existing `AuthContext.tsx`
+4. **Conditional data collection** - modify existing collection logic
+
+### **Phase 4: Testing & Rollout (Week 4)**
+1. **Backward compatibility testing** - ensure existing functionality works
+2. **Gradual feature rollout** - enable enhanced tracking progressively
+3. **Data validation** - monitor field population rates
+4. **Performance optimization** - ensure no impact on app performance
+
+### **Code Organization Strategy**
+
+#### **Extend Existing Files (No Scattering)**
+```
+packages/frontend/src/services/
+├── deviceService.ts          # Enhance existing device registration
+├── sessionService.ts         # Enhance existing session management
+├── consentService.ts         # NEW - consent logic only
+└── userService.ts           # Enhance existing user management
+
+packages/frontend/src/hooks/
+├── useDeviceSession.ts      # Enhance existing hook
+└── useConsent.ts           # NEW - consent management only
+
+packages/frontend/src/common/components/
+├── ConsentModal/           # NEW - EU consent modal
+└── ConsentBanner/          # NEW - California banner
+
+packages/functions/src/
+├── devices/registerDevice.ts    # Enhance existing function
+├── sessions/createSession.ts    # Enhance existing function
+└── privacy/consentManager.ts    # NEW - consent validation
+```
+
+#### **Maintain Code Readability**
+- **Single Responsibility**: Each service handles one concern
+- **Extend, Don't Replace**: Build on existing code patterns
+- **Consistent Naming**: Follow existing naming conventions
+- **Type Safety**: Use existing TypeScript patterns
+- **Error Handling**: Follow existing error handling patterns
+
+This approach ensures seamless implementation without breaking existing functionality while maintaining clean, readable code architecture.

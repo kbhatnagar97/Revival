@@ -20,24 +20,34 @@ exports.createSession = (0, https_1.onCall)(config_1.callableFunctionOptions, as
         throw new https_1.HttpsError('invalid-argument', 'Missing required field: deviceId');
     }
     try {
-        firebase_functions_1.logger.info(`Creating session for user: ${userId}, device: ${deviceId}`);
+        firebase_functions_1.logger.info(`[createSession] Starting session creation for user: ${userId}, device: ${deviceId}`);
+        firebase_functions_1.logger.info(`[createSession] Request data:`, JSON.stringify({ deviceId, ipAddress, location }));
         // Verify device exists
         const deviceRef = firebase_1.db.collection(`users/${userId}/devices`).doc(deviceId);
         const deviceDoc = await deviceRef.get();
         if (!deviceDoc.exists) {
+            firebase_functions_1.logger.error(`[createSession] Device not found: ${deviceId} for user: ${userId}`);
             throw new https_1.HttpsError('not-found', 'Device not found. Please register device first.');
         }
+        firebase_functions_1.logger.info(`[createSession] Device verified successfully: ${deviceId}`);
         const now = firebase_1.Timestamp.now();
         // Generate session ID (deviceId + timestamp for uniqueness)
         const sessionId = `${deviceId}_${now.seconds}`;
-        // Create session document
+        firebase_functions_1.logger.info(`[createSession] Generated session ID: ${sessionId}`);
+        // Create session document with only defined fields
         const sessionData = {
             deviceId,
             loginAt: now,
             lastSeenAt: now,
-            ipAddress: ipAddress || undefined,
-            location: location || undefined,
         };
+        // Only add optional fields if they have actual values (not undefined/null)
+        if (ipAddress !== undefined && ipAddress !== null && ipAddress !== '') {
+            sessionData.ipAddress = ipAddress;
+        }
+        if (location !== undefined && location !== null && location !== '') {
+            sessionData.location = location;
+        }
+        firebase_functions_1.logger.info(`[createSession] Session data to save:`, JSON.stringify(sessionData, null, 2));
         const sessionRef = firebase_1.db.collection(`users/${userId}/userSessions`).doc(sessionId);
         await sessionRef.set(sessionData);
         // Update device lastSeenAt

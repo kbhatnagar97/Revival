@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { deviceService, type UserDevice } from '../services/deviceService';
 import { sessionService, type UserSession } from '../services/sessionService';
+import { consentService, type ConsentRequirements, type GDPRConsent, type CCPAConsent } from '../services/consentService';
 import { authService } from '../services/authService';
 
 export interface DeviceSessionState {
@@ -9,6 +10,8 @@ export interface DeviceSessionState {
   currentDeviceId: string | null;
   currentSessionId: string | null;
   isHeartbeatRunning: boolean;
+  consentRequirements: ConsentRequirements | null;
+  hasValidConsent: boolean;
   loading: boolean;
   error: string | null;
 }
@@ -20,11 +23,13 @@ export const useDeviceSession = () => {
     currentDeviceId: null,
     currentSessionId: null,
     isHeartbeatRunning: false,
+    consentRequirements: null,
+    hasValidConsent: false,
     loading: false,
     error: null,
   });
 
-  // Load devices and sessions
+  // Load devices and sessions with consent checking
   const loadDevicesAndSessions = useCallback(async () => {
     const currentUser = authService.getCurrentUser();
     if (!currentUser) {
@@ -35,6 +40,8 @@ export const useDeviceSession = () => {
         currentDeviceId: null,
         currentSessionId: null,
         isHeartbeatRunning: false,
+        consentRequirements: null,
+        hasValidConsent: false,
         error: null,
       }));
       return;
@@ -43,10 +50,20 @@ export const useDeviceSession = () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const [devices, sessions] = await Promise.all([
-        deviceService.getUserDevices(),
-        sessionService.getUserSessions(),
-      ]);
+      // Check consent requirements first
+      const consentRequirements = await consentService.detectConsentRequirements();
+      const hasValidConsent = consentService.hasValidConsent(consentRequirements);
+
+      // Only load data if consent allows or is not required
+      let devices: UserDevice[] = [];
+      let sessions: UserSession[] = [];
+
+      if (hasValidConsent || !consentRequirements.required) {
+        [devices, sessions] = await Promise.all([
+          deviceService.getUserDevices(),
+          sessionService.getUserSessions(),
+        ]);
+      }
 
       setState(prev => ({
         ...prev,
@@ -55,6 +72,8 @@ export const useDeviceSession = () => {
         currentDeviceId: deviceService.getDeviceId(),
         currentSessionId: sessionService.getCurrentSessionId(),
         isHeartbeatRunning: sessionService.isHeartbeatRunning(),
+        consentRequirements,
+        hasValidConsent,
         loading: false,
       }));
     } catch (error) {
@@ -67,12 +86,34 @@ export const useDeviceSession = () => {
     }
   }, []);
 
-  // Register a new device
+  // Register a new device with consent checking
   const registerDevice = useCallback(async (fcmToken?: string) => {
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser) {
+      setState(prev => ({
+        ...prev,
+        error: 'User not authenticated',
+      }));
+      return;
+    }
+
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      await deviceService.registerDevice(fcmToken);
+      // Check if device registration is allowed
+      const consentRequirements = state.consentRequirements || await consentService.detectConsentRequirements();
+      const canCollectDeviceData = consentService.isDataCollectionAllowed(consentRequirements, 'device');
+
+      if (!canCollectDeviceData) {
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Device registration requires consent',
+        }));
+        return;
+      }
+
+      await deviceService.registerDevice(currentUser.uid, fcmToken);
       await loadDevicesAndSessions(); // Reload to get updated data
     } catch (error) {
       console.error('Failed to register device:', error);
@@ -82,14 +123,23 @@ export const useDeviceSession = () => {
         error: error instanceof Error ? error.message : 'Failed to register device',
       }));
     }
-  }, [loadDevicesAndSessions]);
+  }, [loadDevicesAndSessions, state.consentRequirements]);
 
   // Update FCM token
   const updateFCMToken = useCallback(async (fcmToken: string) => {
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser) {
+      setState(prev => ({
+        ...prev,
+        error: 'User not authenticated',
+      }));
+      return;
+    }
+
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      await deviceService.updateFCMToken(fcmToken);
+      await deviceService.updateFCMToken(currentUser.uid, fcmToken);
       await loadDevicesAndSessions(); // Reload to get updated data
     } catch (error) {
       console.error('Failed to update FCM token:', error);
@@ -143,9 +193,32 @@ export const useDeviceSession = () => {
   }, []);
 
   // Get current device info
-  const getCurrentDeviceInfo = useCallback(() => {
-    return deviceService.getCurrentDeviceInfo();
+  const getCurrentDeviceInfo = useCallback(async () => {
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    return await deviceService.getCurrentDeviceInfo(currentUser.uid);
   }, []);
+
+  // Store consent and reload data
+  const storeConsent = useCallback(async (consent: GDPRConsent | CCPAConsent) => {
+    if (!state.consentRequirements) {
+      throw new Error('No consent requirements detected');
+    }
+
+    try {
+      await consentService.storeConsent(state.consentRequirements, consent);
+      setState(prev => ({ ...prev, hasValidConsent: true }));
+      await loadDevicesAndSessions(); // Reload data now that consent is given
+    } catch (error) {
+      console.error('Failed to store consent:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to store consent',
+      }));
+    }
+  }, [state.consentRequirements, loadDevicesAndSessions]);
 
   // Get active devices (devices seen in the last 30 days)
   const getActiveDevices = useCallback(() => {
@@ -188,6 +261,8 @@ export const useDeviceSession = () => {
           currentDeviceId: null,
           currentSessionId: null,
           isHeartbeatRunning: false,
+          consentRequirements: null,
+          hasValidConsent: false,
           loading: false,
           error: null,
         });
@@ -213,6 +288,7 @@ export const useDeviceSession = () => {
     stopSessionTracking,
     updateHeartbeat,
     getCurrentDeviceInfo,
+    storeConsent,
     
     // Utilities
     getActiveDevices,

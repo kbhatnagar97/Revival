@@ -4,6 +4,11 @@ exports.reorderHabits = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const config_1 = require("../lib/config");
 const firebase_1 = require("../lib/firebase");
+const firebase_functions_1 = require("firebase-functions");
+/**
+ * Reorder habits by updating their order field
+ * Used for drag-and-drop functionality in the frontend
+ */
 exports.reorderHabits = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
     // Check if user is authenticated
     if (!request.auth) {
@@ -11,38 +16,40 @@ exports.reorderHabits = (0, https_1.onCall)(config_1.callableFunctionOptions, as
     }
     const userId = request.auth.uid;
     const { habitIds } = request.data;
-    if (!habitIds || !Array.isArray(habitIds)) {
-        throw new https_1.HttpsError('invalid-argument', 'habitIds must be an array');
+    if (!habitIds || !Array.isArray(habitIds) || habitIds.length === 0) {
+        throw new https_1.HttpsError('invalid-argument', 'habitIds must be a non-empty array');
     }
     try {
-        // Use a transaction to ensure atomic updates
-        await firebase_1.db.runTransaction(async (transaction) => {
-            // Verify all habits belong to the user
-            const habitRefs = habitIds.map(id => firebase_1.db.collection('habits').doc(id));
-            const habitDocs = await Promise.all(habitRefs.map(ref => transaction.get(ref)));
-            // Validate ownership
-            for (const doc of habitDocs) {
-                if (!doc.exists) {
-                    throw new https_1.HttpsError('not-found', `Habit not found: ${doc.id}`);
-                }
-                const data = doc.data();
-                if ((data === null || data === void 0 ? void 0 : data.userId) !== userId) {
-                    throw new https_1.HttpsError('permission-denied', 'Not authorized to reorder these habits');
-                }
+        firebase_functions_1.logger.info(`Reordering habits for user: ${userId}`, {
+            habitIds,
+            count: habitIds.length
+        });
+        // Use a batch to update all habits atomically
+        const batch = firebase_1.db.batch();
+        const now = firebase_1.Timestamp.now();
+        // Update each habit with its new order
+        habitIds.forEach((habitId, index) => {
+            if (typeof habitId !== 'string' || habitId.trim() === '') {
+                throw new https_1.HttpsError('invalid-argument', `Invalid habitId at index ${index}: ${habitId}`);
             }
-            // Update sort orders
-            habitIds.forEach((habitId, index) => {
-                const habitRef = firebase_1.db.collection('habits').doc(habitId);
-                transaction.update(habitRef, {
-                    sortOrder: index,
-                    updatedAt: firebase_1.Timestamp.now(),
-                });
+            const habitRef = firebase_1.db.collection(`users/${userId}/habits`).doc(habitId);
+            batch.update(habitRef, {
+                order: index,
+                updatedAt: now
             });
         });
-        return { success: true };
+        // Commit the batch
+        await batch.commit();
+        firebase_functions_1.logger.info(`Successfully reordered ${habitIds.length} habits for user: ${userId}`);
+        return {
+            success: true,
+            message: `Successfully reordered ${habitIds.length} habits`,
+            habitIds,
+            updatedAt: now.toDate().toISOString()
+        };
     }
     catch (error) {
-        console.error('Error reordering habits:', error);
+        firebase_functions_1.logger.error('Error reordering habits:', error);
         if (error instanceof https_1.HttpsError) {
             throw error;
         }
