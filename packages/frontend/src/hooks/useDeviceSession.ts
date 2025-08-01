@@ -113,7 +113,7 @@ export const useDeviceSession = () => {
         return;
       }
 
-      await deviceService.registerDevice(currentUser.uid, fcmToken);
+      await deviceService.registerDeviceLegacy(fcmToken);
       await loadDevicesAndSessions(); // Reload to get updated data
     } catch (error) {
       console.error('Failed to register device:', error);
@@ -139,7 +139,7 @@ export const useDeviceSession = () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      await deviceService.updateFCMToken(currentUser.uid, fcmToken);
+      await deviceService.registerDeviceLegacy(fcmToken);
       await loadDevicesAndSessions(); // Reload to get updated data
     } catch (error) {
       console.error('Failed to update FCM token:', error);

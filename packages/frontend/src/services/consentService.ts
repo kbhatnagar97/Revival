@@ -76,13 +76,69 @@ class ConsentManager {
       };
     } catch (error) {
       console.error('Failed to detect consent requirements:', error);
-      // Default to no consent required if detection fails
-      return {
-        required: false,
-        type: 'none',
-        country: 'Unknown',
-        countryCode: 'XX'
-      };
+      
+      // If it's a CORS or network error, try to detect location client-side as fallback
+      try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        
+        // Basic heuristics based on timezone and language
+        let countryCode = 'XX';
+        let country = 'Unknown';
+        
+        // Simple timezone-based detection (not perfect but better than nothing)
+        if (timezone.includes('Europe/')) {
+          const city = timezone.split('/')[1];
+          if (['London', 'Dublin'].includes(city)) {
+            countryCode = 'GB';
+            country = 'United Kingdom';
+          } else if (['Berlin', 'Munich'].includes(city)) {
+            countryCode = 'DE';
+            country = 'Germany';
+          } else if (['Paris'].includes(city)) {
+            countryCode = 'FR';
+            country = 'France';
+          } else {
+            // Default to a generic EU country for GDPR compliance
+            countryCode = 'DE';
+            country = 'Europe';
+          }
+        } else if (timezone.includes('America/')) {
+          if (timezone.includes('Los_Angeles') || timezone.includes('San_Francisco')) {
+            countryCode = 'US';
+            country = 'United States';
+          } else {
+            countryCode = 'US';
+            country = 'United States';
+          }
+        }
+        
+        // Check if GDPR applies
+        if (this.GDPR_COUNTRIES.includes(countryCode)) {
+          return {
+            required: true,
+            type: 'gdpr',
+            country,
+            countryCode
+          };
+        }
+        
+        // Default to no consent required
+        return {
+          required: false,
+          type: 'none',
+          country,
+          countryCode
+        };
+      } catch (fallbackError) {
+        console.error('Fallback location detection also failed:', fallbackError);
+        // Ultimate fallback - assume no consent required
+        return {
+          required: false,
+          type: 'none',
+          country: 'Unknown',
+          countryCode: 'XX'
+        };
+      }
     }
   }
 
