@@ -64,95 +64,137 @@ async function getHostnameFromIP(ipAddress: string): Promise<string | null> {
 async function getLocationAndNetworkFromIP(ipAddress: string) {
   console.log(`[getLocationAndNetworkFromIP] Processing IP: ${ipAddress}`);
   
-  // Enhanced fallback data with more meaningful defaults
+  // Minimal fallback data - only used when APIs completely fail
   const fallbackData = {
     location: {
-      country: 'Unknown',
-      countryCode: 'XX',
-      region: 'Unknown',
-      city: 'Unknown',
+      country: null,
+      countryCode: null,
+      region: null,
+      city: null,
       timezone: 'UTC',
       timezoneOffset: 0
     },
     network: {
-      hostname: 'Unknown',
-      isp: 'Unknown ISP',
-      asn: 'Unknown ASN'
+      hostname: null,
+      isp: null,
+      asn: null
     }
   };
 
   try {
-    // Only skip API call for truly local/invalid IPs
-    if (!ipAddress || ipAddress === 'unknown' || ipAddress === '127.0.0.1' || ipAddress === '::1') {
+    // Only skip API call for truly local/invalid IPs - be much more permissive
+    if (!ipAddress || ipAddress === 'unknown' || ipAddress === '127.0.0.1' || ipAddress === '::1' || ipAddress === 'localhost') {
       console.log(`[getLocationAndNetworkFromIP] Skipping local/invalid IP: ${ipAddress}`);
       return fallbackData;
     }
 
-    // Check for private IP ranges more precisely
-    const isPrivateIP = ipAddress.startsWith('192.168.') ||
-                       ipAddress.startsWith('10.') ||
-                       (ipAddress.startsWith('172.') &&
-                        parseInt(ipAddress.split('.')[1]) >= 16 &&
-                        parseInt(ipAddress.split('.')[1]) <= 31);
-
-    if (isPrivateIP) {
-      console.log(`[getLocationAndNetworkFromIP] Skipping private IP: ${ipAddress}`);
-      return fallbackData;
-    }
+    // REMOVE private IP filtering - let the API handle it and return actual data
+    // Many "private" IPs from cloud providers are actually valid public IPs
+    console.log(`[getLocationAndNetworkFromIP] Processing IP (no private IP filtering): ${ipAddress}`);
 
     console.log(`[getLocationAndNetworkFromIP] Making API call for IP: ${ipAddress}`);
 
-    // Using a free IP geolocation service with timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased to 10 second timeout
-    
-    const response = await fetch(`https://ip-api.com/json/${ipAddress}?fields=status,country,countryCode,region,city,timezone,offset,isp,as,org,query`, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Revival-App/1.0',
-        'Accept': 'application/json'
+    // Try multiple geolocation services for better reliability
+    let data = null;
+    let apiUsed = 'none';
+
+    // First try ip-api.com (most comprehensive)
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
+      const response = await fetch(`http://ip-api.com/json/${ipAddress}?fields=status,country,countryCode,region,regionName,city,timezone,offset,isp,as,org,query,lat,lon`, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Revival-App/1.0',
+          'Accept': 'application/json'
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        data = await response.json();
+        apiUsed = 'ip-api.com';
+        console.log(`[getLocationAndNetworkFromIP] ip-api.com response:`, JSON.stringify(data, null, 2));
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    } catch (error) {
+      console.warn(`[getLocationAndNetworkFromIP] ip-api.com failed:`, error instanceof Error ? error.message : String(error));
+      
+      // Fallback to ipapi.co
+      try {
+        const controller2 = new AbortController();
+        const timeoutId2 = setTimeout(() => controller2.abort(), 10000);
+        
+        const response2 = await fetch(`https://ipapi.co/${ipAddress}/json/`, {
+          signal: controller2.signal,
+          headers: {
+            'User-Agent': 'Revival-App/1.0',
+            'Accept': 'application/json'
+          }
+        });
+        
+        clearTimeout(timeoutId2);
+        
+        if (response2.ok) {
+          const ipApiData = await response2.json();
+          // Convert ipapi.co format to ip-api.com format
+          data = {
+            status: 'success',
+            country: ipApiData.country_name,
+            countryCode: ipApiData.country_code,
+            region: ipApiData.region,
+            regionName: ipApiData.region,
+            city: ipApiData.city,
+            timezone: ipApiData.timezone,
+            offset: ipApiData.utc_offset ? parseInt(ipApiData.utc_offset.replace(':', '')) : 0,
+            isp: ipApiData.org,
+            as: ipApiData.asn,
+            org: ipApiData.org,
+            query: ipAddress
+          };
+          apiUsed = 'ipapi.co';
+          console.log(`[getLocationAndNetworkFromIP] ipapi.co response converted:`, JSON.stringify(data, null, 2));
+        }
+      } catch (error2) {
+        console.error(`[getLocationAndNetworkFromIP] Both APIs failed:`, error2 instanceof Error ? error2.message : String(error2));
+      }
     }
     
-    const data = await response.json();
-    console.log(`[getLocationAndNetworkFromIP] API response:`, JSON.stringify(data, null, 2));
-    
-    if (data.status === 'success') {
+    if (data && (data.status === 'success' || apiUsed === 'ipapi.co')) {
+      console.log(`[getLocationAndNetworkFromIP] Successfully got data from ${apiUsed}`);
+      
       // Get hostname via reverse DNS lookup (with error handling)
-      let hostname = 'Unknown';
+      let hostname = null;
       try {
-        const resolvedHostname = await getHostnameFromIP(ipAddress);
-        hostname = resolvedHostname || `${data.isp || 'Unknown'} Network`;
+        hostname = await getHostnameFromIP(ipAddress);
+        console.log(`[getLocationAndNetworkFromIP] Resolved hostname: ${hostname}`);
       } catch (error) {
-        hostname = `${data.isp || 'Unknown'} Network`;
+        console.log(`[getLocationAndNetworkFromIP] Hostname resolution failed, will use ISP-based hostname`);
       }
       
       const result = {
         location: {
           country: data.country || 'Unknown',
           countryCode: data.countryCode || 'XX',
-          region: data.region || data.regionName || 'Unknown',
-          city: data.city || 'Unknown',
+          region: data.region || data.regionName || null,
+          city: data.city || null,
           timezone: data.timezone || 'UTC',
           timezoneOffset: typeof data.offset === 'number' ? data.offset : 0
         },
         network: {
-          hostname: hostname,
-          isp: data.isp || data.org || 'Unknown ISP',
-          asn: data.as || 'Unknown ASN'
+          hostname: hostname || (data.isp ? `${data.isp} Network` : null),
+          isp: data.isp || data.org || null,
+          asn: data.as || null
         }
       };
       
-      console.log(`[getLocationAndNetworkFromIP] Successful result:`, JSON.stringify(result, null, 2));
+      console.log(`[getLocationAndNetworkFromIP] Final result from ${apiUsed}:`, JSON.stringify(result, null, 2));
       return result;
     } else {
-      console.warn(`[getLocationAndNetworkFromIP] API returned failure status:`, data);
+      console.error(`[getLocationAndNetworkFromIP] All APIs failed or returned invalid data`);
     }
   } catch (error) {
     console.error(`[getLocationAndNetworkFromIP] Error processing IP ${ipAddress}:`, error instanceof Error ? error.message : String(error));
