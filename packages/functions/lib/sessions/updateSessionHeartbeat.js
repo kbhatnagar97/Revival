@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateSessionHeartbeat = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const config_1 = require("../lib/config");
-const firebase_1 = require("../lib/firebase");
+const firestore_1 = require("firebase-admin/firestore");
 const firebase_functions_1 = require("firebase-functions");
 /**
  * Update session heartbeat to track user activity
@@ -22,9 +22,10 @@ exports.updateSessionHeartbeat = (0, https_1.onCall)(config_1.callableFunctionOp
     }
     try {
         firebase_functions_1.logger.info(`Updating heartbeat for session: ${sessionId}, user: ${userId}`);
-        const now = firebase_1.Timestamp.now();
+        const db = (0, firestore_1.getFirestore)();
+        const now = firestore_1.Timestamp.now();
         // Update session lastSeenAt
-        const sessionRef = firebase_1.db.collection(`users/${userId}/userSessions`).doc(sessionId);
+        const sessionRef = db.collection(`users/${userId}/userSessions`).doc(sessionId);
         const sessionDoc = await sessionRef.get();
         if (!sessionDoc.exists) {
             throw new https_1.HttpsError('not-found', 'Session not found');
@@ -39,7 +40,7 @@ exports.updateSessionHeartbeat = (0, https_1.onCall)(config_1.callableFunctionOp
         }
         await sessionRef.update(updateData);
         // Also update device lastSeenAt
-        const deviceRef = firebase_1.db.collection(`users/${userId}/devices`).doc(deviceId);
+        const deviceRef = db.collection(`users/${userId}/devices`).doc(deviceId);
         await deviceRef.update({
             lastSeenAt: now,
         });
