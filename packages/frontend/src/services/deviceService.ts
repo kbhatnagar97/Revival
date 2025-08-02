@@ -19,47 +19,162 @@ const getDeviceType = (): 'mobile' | 'web' | 'desktop' => {
 const getOperatingSystem = (): { osName: string; osVersion: string } => {
   const userAgent = navigator.userAgent;
   
-  // Extract OS name and version
-  let osName = 'Generic OS';
-  let osVersion = 'Latest';
+  // Extract OS name and version with enhanced detection
+  let osName = 'Unidentified OS';
+  let osVersion = 'Platform: ' + (navigator.platform || 'unknown');
   
   if (userAgent.includes('Windows')) {
     osName = 'Windows';
     const match = userAgent.match(/Windows NT ([\d.]+)/);
     if (match) {
       const version = match[1];
-      // Map NT versions to user-friendly names
+      // Map NT versions to user-friendly names with architecture
+      const arch = /WOW64/.test(userAgent) ? ' (32-bit on 64-bit)' : /Win64/.test(userAgent) ? ' (64-bit)' : '';
       switch (version) {
-        case '10.0': osVersion = '10'; break;
-        case '6.3': osVersion = '8.1'; break;
-        case '6.2': osVersion = '8'; break;
-        case '6.1': osVersion = '7'; break;
-        case '6.0': osVersion = 'Vista'; break;
+        case '10.0':
+          // Try to detect Windows 11
+          if (/Edg\//.test(userAgent) && /Win64; x64/.test(userAgent)) {
+            osVersion = '10/11' + arch;
+          } else {
+            osVersion = '10' + arch;
+          }
+          break;
+        case '6.3': osVersion = '8.1' + arch; break;
+        case '6.2': osVersion = '8' + arch; break;
+        case '6.1': osVersion = '7' + arch; break;
+        case '6.0': osVersion = 'Vista' + arch; break;
         case '5.1': osVersion = 'XP'; break;
-        default: osVersion = version;
+        case '5.0': osVersion = '2000'; break;
+        default: osVersion = 'NT ' + version + arch;
       }
     } else {
-      osVersion = 'Generic';
+      osVersion = '9x/ME or Legacy';
     }
   } else if (userAgent.includes('Mac OS')) {
     osName = 'macOS';
     const match = userAgent.match(/Mac OS X ([\d_]+)/);
-    osVersion = match ? match[1].replace(/_/g, '.') : 'Latest';
+    if (match) {
+      const version = match[1].replace(/_/g, '.');
+      const parts = version.split('.');
+      const major = parseInt(parts[1]);
+      
+      // Map to macOS version names
+      const versionNames: { [key: number]: string } = {
+        15: 'Catalina',
+        14: 'Mojave',
+        13: 'High Sierra',
+        12: 'Sierra',
+        11: 'El Capitan',
+        10: 'Yosemite'
+      };
+      
+      const versionName = versionNames[major];
+      osVersion = versionName ? `${versionName} (${version})` : version;
+    } else {
+      // Check for modern macOS versions
+      const modernMatch = userAgent.match(/Mac OS X (\d+\.\d+)/);
+      if (modernMatch) {
+        const version = modernMatch[1];
+        const major = parseInt(version.split('.')[0]);
+        const modernNames: { [key: number]: string } = {
+          13: 'Ventura',
+          12: 'Monterey',
+          11: 'Big Sur'
+        };
+        const versionName = modernNames[major];
+        osVersion = versionName ? `${versionName} (${version})` : version;
+      } else {
+        osVersion = 'Darwin-based System';
+      }
+    }
   } else if (userAgent.includes('Linux') && !userAgent.includes('Android')) {
-    osName = 'Linux';
-    osVersion = 'Generic';
+    // Try to detect specific Linux distributions
+    if (userAgent.includes('Ubuntu')) {
+      osName = 'Ubuntu Linux';
+      const ubuntuMatch = userAgent.match(/Ubuntu\/(\d+\.\d+)/);
+      osVersion = ubuntuMatch ? ubuntuMatch[1] + ' LTS' : 'Distribution';
+    } else if (userAgent.includes('Fedora')) {
+      osName = 'Fedora Linux';
+      osVersion = 'Workstation';
+    } else if (userAgent.includes('SUSE')) {
+      osName = 'SUSE Linux';
+      osVersion = 'Enterprise';
+    } else if (userAgent.includes('Red Hat')) {
+      osName = 'Red Hat Enterprise Linux';
+      osVersion = 'RHEL';
+    } else if (userAgent.includes('CentOS')) {
+      osName = 'CentOS Linux';
+      osVersion = 'Server';
+    } else if (userAgent.includes('Debian')) {
+      osName = 'Debian Linux';
+      osVersion = 'Stable';
+    } else {
+      osName = 'Linux';
+      const arch = /x86_64/.test(userAgent) ? ' (64-bit)' : /i686/.test(userAgent) ? ' (32-bit)' : '';
+      osVersion = 'Distribution' + arch;
+    }
   } else if (userAgent.includes('Android')) {
     osName = 'Android';
     const match = userAgent.match(/Android ([\d.]+)/);
-    osVersion = match ? match[1] : 'Latest';
+    if (match) {
+      const version = match[1];
+      const major = parseInt(version.split('.')[0]);
+      
+      // Map Android versions to names
+      const androidNames: { [key: number]: string } = {
+        13: 'Tiramisu',
+        12: 'Snow Cone',
+        11: 'Red Velvet Cake',
+        10: 'Quince Tart',
+        9: 'Pie',
+        8: 'Oreo',
+        7: 'Nougat',
+        6: 'Marshmallow',
+        5: 'Lollipop',
+        4: 'KitKat/Jelly Bean'
+      };
+      
+      const versionName = androidNames[major];
+      osVersion = versionName ? `${version} ${versionName}` : version;
+    } else {
+      osVersion = 'Mobile Device';
+    }
   } else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
     osName = 'iOS';
     const match = userAgent.match(/OS ([\d_]+)/);
-    osVersion = match ? match[1].replace(/_/g, '.') : 'Latest';
+    if (match) {
+      const version = match[1].replace(/_/g, '.');
+      const deviceType = userAgent.includes('iPhone') ? ' iPhone' : userAgent.includes('iPad') ? ' iPad' : ' iPod';
+      osVersion = version + deviceType;
+    } else {
+      osVersion = userAgent.includes('iPhone') ? 'iPhone' : userAgent.includes('iPad') ? 'iPad' : 'iPod Touch';
+    }
   } else if (userAgent.includes('CrOS')) {
     osName = 'Chrome OS';
-    const match = userAgent.match(/CrOS [^\s]+ ([\d.]+)/);
-    osVersion = match ? match[1] : 'Latest';
+    const match = userAgent.match(/CrOS ([^\s]+) ([\d.]+)/);
+    if (match) {
+      const arch = match[1];
+      const version = match[2];
+      osVersion = `${version} (${arch})`;
+    } else {
+      osVersion = 'Chromebook';
+    }
+  } else if (userAgent.includes('FreeBSD')) {
+    osName = 'FreeBSD';
+    const match = userAgent.match(/FreeBSD\/(\d+\.\d+)/);
+    osVersion = match ? match[1] + ' Unix-like' : 'Unix-like System';
+  } else if (userAgent.includes('OpenBSD')) {
+    osName = 'OpenBSD';
+    osVersion = 'Unix-like System';
+  } else if (userAgent.includes('NetBSD')) {
+    osName = 'NetBSD';
+    osVersion = 'Unix-like System';
+  } else if (userAgent.includes('SunOS')) {
+    osName = 'Solaris';
+    osVersion = 'Unix System';
+  } else if (userAgent.includes('AIX')) {
+    osName = 'IBM AIX';
+    osVersion = 'Unix System';
   }
   
   return { osName, osVersion };
@@ -199,103 +314,226 @@ const getEnhancedHardwareInfo = (): DeviceHardware => {
 const getEnhancedOSInfo = (): DeviceOS => {
   const userAgent = navigator.userAgent;
   
-  // Windows detection - Enhanced with more versions
+  // Windows detection - Enhanced with more versions and build detection
   if (/Windows NT 10.0/.test(userAgent)) {
-    // Check for Windows 11 (build 22000+)
-    if (/Windows NT 10.0.*rv:11/.test(userAgent) || /Windows NT 10.0.*Edg\//.test(userAgent)) {
-      return { name: "Windows", version: "11" };
+    // Try to detect Windows 11 more accurately
+    const buildMatch = userAgent.match(/Windows NT 10\.0; Win64; x64.*rv:(\d+)/);
+    if (buildMatch && parseInt(buildMatch[1]) >= 91) {
+      return { name: "Windows", version: "11 (Build 22000+)" };
     }
+    
+    // Check for Windows 11 indicators
+    if (/Windows NT 10.0.*Edg\//.test(userAgent) && /Win64; x64/.test(userAgent)) {
+      return { name: "Windows", version: "10/11 (x64)" };
+    }
+    
+    // Detect architecture
+    if (/WOW64/.test(userAgent)) {
+      return { name: "Windows", version: "10 (32-bit on 64-bit)" };
+    } else if (/Win64; x64/.test(userAgent)) {
+      return { name: "Windows", version: "10 (64-bit)" };
+    } else if (/ARM64/.test(userAgent)) {
+      return { name: "Windows", version: "10 (ARM64)" };
+    }
+    
     return { name: "Windows", version: "10" };
   }
-  if (/Windows NT 6.3/.test(userAgent)) return { name: "Windows", version: "8.1" };
+  if (/Windows NT 6.3/.test(userAgent)) {
+    const arch = /WOW64/.test(userAgent) ? " (32-bit on 64-bit)" : /Win64/.test(userAgent) ? " (64-bit)" : "";
+    return { name: "Windows", version: `8.1${arch}` };
+  }
   if (/Windows NT 6.2/.test(userAgent)) return { name: "Windows", version: "8" };
-  if (/Windows NT 6.1/.test(userAgent)) return { name: "Windows", version: "7" };
+  if (/Windows NT 6.1/.test(userAgent)) {
+    const arch = /WOW64/.test(userAgent) ? " (32-bit on 64-bit)" : /Win64/.test(userAgent) ? " (64-bit)" : "";
+    return { name: "Windows", version: `7${arch}` };
+  }
   if (/Windows NT 6.0/.test(userAgent)) return { name: "Windows", version: "Vista" };
   if (/Windows NT 5.1/.test(userAgent)) return { name: "Windows", version: "XP" };
-  if (/Windows/.test(userAgent)) return { name: "Windows", version: "Legacy" };
+  if (/Windows NT 5.0/.test(userAgent)) return { name: "Windows", version: "2000" };
+  if (/Windows/.test(userAgent)) return { name: "Windows", version: "9x/ME" };
   
-  // macOS detection - Enhanced with more versions
+  // macOS detection - Enhanced with version mapping and architecture
   const macMatch = userAgent.match(/Mac OS X 10[._](\d+)[._]?(\d+)?/);
   if (macMatch) {
     const major = parseInt(macMatch[1]);
     const minor = macMatch[2] ? parseInt(macMatch[2]) : 0;
     
-    // Map to macOS version names for recent versions
-    if (major >= 15) return { name: "macOS", version: `${10 + major}.${minor}` };
-    if (major === 14) return { name: "macOS", version: "Mojave" };
-    if (major === 13) return { name: "macOS", version: "High Sierra" };
-    if (major === 12) return { name: "macOS", version: "Sierra" };
-    
-    return { name: "macOS", version: `10.${major}${minor ? '.' + minor : ''}` };
-  }
-  
-  // Check for newer macOS versions that don't use the old format
-  if (/Macintosh/.test(userAgent) || /Mac OS/.test(userAgent)) {
-    return { name: "macOS", version: "Latest" };
-  }
-  
-  // iOS detection - Enhanced
-  const iosMatch = userAgent.match(/OS (\d+)[._](\d+)/);
-  if (iosMatch) {
-    return { name: "iOS", version: `${iosMatch[1]}.${iosMatch[2]}` };
-  }
-  
-  // Check for iOS without version info
-  if (/iPhone|iPad|iPod/.test(userAgent)) {
-    return { name: "iOS", version: "Latest" };
-  }
-  
-  // Android detection - Enhanced
-  const androidMatch = userAgent.match(/Android (\d+\.?\d*\.?\d*)/);
-  if (androidMatch) {
-    return { name: "Android", version: androidMatch[1] };
-  }
-  
-  // Check for Android without version info
-  if (/Android/.test(userAgent)) {
-    return { name: "Android", version: "Latest" };
-  }
-  
-  // Linux detection - Enhanced
-  if (/Linux/.test(userAgent) && !/Android/.test(userAgent)) {
-    // Try to detect specific Linux distributions
-    if (/Ubuntu/.test(userAgent)) return { name: "Ubuntu", version: "Latest" };
-    if (/Fedora/.test(userAgent)) return { name: "Fedora", version: "Latest" };
-    if (/SUSE/.test(userAgent)) return { name: "SUSE", version: "Latest" };
-    if (/Red Hat/.test(userAgent)) return { name: "Red Hat", version: "Latest" };
-    if (/CentOS/.test(userAgent)) return { name: "CentOS", version: "Latest" };
-    if (/Debian/.test(userAgent)) return { name: "Debian", version: "Latest" };
-    
-    return { name: "Linux", version: "Generic" };
-  }
-  
-  // Chrome OS detection
-  if (/CrOS/.test(userAgent)) {
-    const crosMatch = userAgent.match(/CrOS [^\s]+ ([\d.]+)/);
-    return {
-      name: "Chrome OS",
-      version: crosMatch ? crosMatch[1] : "Latest"
+    // Map to actual macOS version names
+    const versionMap: { [key: number]: string } = {
+      15: "Catalina",
+      14: "Mojave",
+      13: "High Sierra",
+      12: "Sierra",
+      11: "El Capitan",
+      10: "Yosemite",
+      9: "Mavericks",
+      8: "Mountain Lion",
+      7: "Lion"
     };
+    
+    const versionName = versionMap[major] || `10.${major}`;
+    const fullVersion = minor > 0 ? `${versionName} (10.${major}.${minor})` : versionName;
+    
+    // Detect Apple Silicon
+    if (/Intel/.test(userAgent)) {
+      return { name: "macOS", version: `${fullVersion} Intel` };
+    } else if (/PPC/.test(userAgent)) {
+      return { name: "macOS", version: `${fullVersion} PowerPC` };
+    }
+    
+    return { name: "macOS", version: fullVersion };
   }
   
-  // FreeBSD, OpenBSD, NetBSD
-  if (/FreeBSD/.test(userAgent)) return { name: "FreeBSD", version: "Latest" };
-  if (/OpenBSD/.test(userAgent)) return { name: "OpenBSD", version: "Latest" };
-  if (/NetBSD/.test(userAgent)) return { name: "NetBSD", version: "Latest" };
+  // Check for newer macOS versions (Big Sur 11.0+, Monterey 12.0+, etc.)
+  const modernMacMatch = userAgent.match(/Mac OS X (\d+)[._](\d+)[._]?(\d+)?/);
+  if (modernMacMatch) {
+    const major = parseInt(modernMacMatch[1]);
+    const minor = parseInt(modernMacMatch[2]);
+    const patch = modernMacMatch[3] ? parseInt(modernMacMatch[3]) : 0;
+    
+    const modernVersionMap: { [key: number]: string } = {
+      13: "Ventura",
+      12: "Monterey",
+      11: "Big Sur"
+    };
+    
+    const versionName = modernVersionMap[major] || `macOS ${major}`;
+    return { name: "macOS", version: `${versionName} (${major}.${minor}${patch ? '.' + patch : ''})` };
+  }
   
-  // Fallback - try to extract any OS info from user agent
-  if (/Windows/.test(userAgent)) return { name: "Windows", version: "Generic" };
-  if (/Mac/.test(userAgent)) return { name: "macOS", version: "Generic" };
-  if (/X11/.test(userAgent)) return { name: "Unix", version: "Generic" };
+  // Generic Mac detection
+  if (/Macintosh/.test(userAgent) || /Mac OS/.test(userAgent)) {
+    const arch = /Intel/.test(userAgent) ? " Intel" : /PPC/.test(userAgent) ? " PowerPC" : "";
+    return { name: "macOS", version: `Modern${arch}` };
+  }
   
-  // Final fallback - use browser info as OS indicator
-  if (/Chrome/.test(userAgent)) return { name: "Web Browser", version: "Chrome-based" };
-  if (/Firefox/.test(userAgent)) return { name: "Web Browser", version: "Firefox-based" };
-  if (/Safari/.test(userAgent)) return { name: "Web Browser", version: "Safari-based" };
-  if (/Edge/.test(userAgent)) return { name: "Web Browser", version: "Edge-based" };
+  // iOS detection - Enhanced with device type
+  const iosMatch = userAgent.match(/OS (\d+)[._](\d+)[._]?(\d+)?/);
+  if (iosMatch) {
+    const major = iosMatch[1];
+    const minor = iosMatch[2];
+    const patch = iosMatch[3] || "0";
+    
+    let deviceType = "";
+    if (/iPhone/.test(userAgent)) deviceType = " iPhone";
+    else if (/iPad/.test(userAgent)) deviceType = " iPad";
+    else if (/iPod/.test(userAgent)) deviceType = " iPod";
+    
+    return { name: "iOS", version: `${major}.${minor}.${patch}${deviceType}` };
+  }
   
-  // Absolute fallback
-  return { name: "Generic OS", version: "Latest" };
+  // Check for iOS without detailed version info
+  if (/iPhone/.test(userAgent)) return { name: "iOS", version: "iPhone" };
+  if (/iPad/.test(userAgent)) return { name: "iOS", version: "iPad" };
+  if (/iPod/.test(userAgent)) return { name: "iOS", version: "iPod Touch" };
+  
+  // Android detection - Enhanced with version names and device info
+  const androidMatch = userAgent.match(/Android (\d+)\.?(\d+)?\.?(\d+)?/);
+  if (androidMatch) {
+    const major = parseInt(androidMatch[1]);
+    const minor = androidMatch[2] ? parseInt(androidMatch[2]) : 0;
+    const patch = androidMatch[3] ? parseInt(androidMatch[3]) : 0;
+    
+    // Map Android versions to names
+    const androidVersionMap: { [key: number]: string } = {
+      13: "Tiramisu",
+      12: "Snow Cone",
+      11: "Red Velvet Cake",
+      10: "Quince Tart",
+      9: "Pie",
+      8: "Oreo",
+      7: "Nougat",
+      6: "Marshmallow",
+      5: "Lollipop",
+      4: "KitKat/Jelly Bean/Ice Cream Sandwich"
+    };
+    
+    const versionName = androidVersionMap[major] || `API ${major}`;
+    const fullVersion = `${major}.${minor}${patch ? '.' + patch : ''} ${versionName}`;
+    
+    // Try to extract device model
+    const modelMatch = userAgent.match(/\(([^)]+)\)/);
+    if (modelMatch) {
+      const deviceInfo = modelMatch[1].split(';');
+      const model = deviceInfo.find(part =>
+        part.trim() &&
+        !part.includes('Android') &&
+        !part.includes('Mobile') &&
+        !part.includes('wv')
+      )?.trim();
+      
+      if (model) {
+        return { name: "Android", version: `${fullVersion} (${model})` };
+      }
+    }
+    
+    return { name: "Android", version: fullVersion };
+  }
+  
+  // Generic Android detection
+  if (/Android/.test(userAgent)) {
+    return { name: "Android", version: "Mobile Device" };
+  }
+  
+  // Linux detection - Enhanced with distribution detection
+  if (/Linux/.test(userAgent) && !/Android/.test(userAgent)) {
+    // Try to detect specific Linux distributions from user agent
+    if (/Ubuntu/.test(userAgent)) {
+      const ubuntuMatch = userAgent.match(/Ubuntu\/(\d+\.\d+)/);
+      return { name: "Ubuntu Linux", version: ubuntuMatch ? ubuntuMatch[1] : "LTS" };
+    }
+    if (/Fedora/.test(userAgent)) return { name: "Fedora Linux", version: "Workstation" };
+    if (/SUSE/.test(userAgent)) return { name: "SUSE Linux", version: "Enterprise" };
+    if (/Red Hat/.test(userAgent)) return { name: "Red Hat Enterprise Linux", version: "RHEL" };
+    if (/CentOS/.test(userAgent)) return { name: "CentOS Linux", version: "Server" };
+    if (/Debian/.test(userAgent)) return { name: "Debian Linux", version: "Stable" };
+    if (/Mint/.test(userAgent)) return { name: "Linux Mint", version: "Desktop" };
+    if (/Arch/.test(userAgent)) return { name: "Arch Linux", version: "Rolling" };
+    
+    // Detect architecture
+    const arch = /x86_64/.test(userAgent) ? " (64-bit)" : /i686/.test(userAgent) ? " (32-bit)" : /aarch64/.test(userAgent) ? " (ARM64)" : "";
+    return { name: "Linux", version: `Distribution${arch}` };
+  }
+  
+  // Chrome OS detection - Enhanced
+  if (/CrOS/.test(userAgent)) {
+    const crosMatch = userAgent.match(/CrOS ([^\s]+) ([\d.]+)/);
+    if (crosMatch) {
+      const arch = crosMatch[1];
+      const version = crosMatch[2];
+      return { name: "Chrome OS", version: `${version} (${arch})` };
+    }
+    return { name: "Chrome OS", version: "Chromebook" };
+  }
+  
+  // BSD variants
+  if (/FreeBSD/.test(userAgent)) {
+    const bsdMatch = userAgent.match(/FreeBSD\/(\d+\.\d+)/);
+    return { name: "FreeBSD", version: bsdMatch ? bsdMatch[1] : "Unix-like" };
+  }
+  if (/OpenBSD/.test(userAgent)) return { name: "OpenBSD", version: "Unix-like" };
+  if (/NetBSD/.test(userAgent)) return { name: "NetBSD", version: "Unix-like" };
+  
+  // Unix variants
+  if (/SunOS/.test(userAgent)) return { name: "Solaris", version: "Unix System" };
+  if (/AIX/.test(userAgent)) return { name: "IBM AIX", version: "Unix System" };
+  
+  // Fallback detection based on platform indicators
+  if (/Windows/.test(userAgent)) return { name: "Windows", version: "NT-based" };
+  if (/Mac/.test(userAgent)) return { name: "macOS", version: "Darwin-based" };
+  if (/X11/.test(userAgent)) return { name: "Unix-like", version: "X11 System" };
+  
+  // Browser-based OS detection as last resort
+  if (/Chrome/.test(userAgent)) {
+    const platform = navigator.platform;
+    if (platform.includes('Win')) return { name: "Windows", version: "Chrome Platform" };
+    if (platform.includes('Mac')) return { name: "macOS", version: "Chrome Platform" };
+    if (platform.includes('Linux')) return { name: "Linux", version: "Chrome Platform" };
+  }
+  
+  // Final fallback with platform information
+  const platform = navigator.platform || "unknown";
+  return { name: "Unidentified OS", version: `Platform: ${platform}` };
 };
 
 const getDeviceCapabilities = async (): Promise<DeviceCapabilities> => {
