@@ -359,35 +359,9 @@ const getDeviceCapabilities = async (): Promise<DeviceCapabilities> => {
 };
 
 const getNetworkInfo = async (): Promise<{ hostname?: string; isp?: string }> => {
-  try {
-    // Try to get network information from FindIP API
-    const response = await fetch('https://findip.net/api/v1/ip/me?auth=free');
-    const data = await response.json();
-    
-    if (data.status === 'success' && data.data) {
-      return {
-        hostname: data.data.organization || data.data.isp || undefined,
-        isp: data.data.isp || data.data.organization || undefined
-      };
-    }
-    
-    // Fallback to ip-api.com if FindIP fails
-    const fallbackResponse = await fetch('http://ip-api.com/json/?fields=org,isp');
-    const fallbackData = await fallbackResponse.json();
-    
-    if (fallbackData.status === 'success') {
-      return {
-        hostname: fallbackData.org || fallbackData.isp || undefined,
-        isp: fallbackData.isp || fallbackData.org || undefined
-      };
-    }
-    
-    return {};
-  } catch (error) {
-    console.warn('Failed to detect network info:', error);
-    // Return empty object with undefined values (will be omitted by Firestore)
-    return {};
-  }
+  // Network information will be populated by the backend during session creation
+  // Frontend doesn't need to make external API calls that cause CORS issues
+  return {};
 };
 
 const getEnhancedDeviceModel = (): string | undefined => {
