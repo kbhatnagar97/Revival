@@ -21,15 +21,17 @@ exports.updateSessionHeartbeat = (0, https_1.onCall)(config_1.callableFunctionOp
         throw new https_1.HttpsError('invalid-argument', 'Missing required fields: sessionId, deviceId');
     }
     try {
-        firebase_functions_1.logger.info(`Updating heartbeat for session: ${sessionId}, user: ${userId}`);
+        firebase_functions_1.logger.info(`Updating heartbeat for session: ${sessionId}, user: ${userId}, deviceId: ${deviceId}, orientation: ${orientation}`);
         const db = (0, firestore_1.getFirestore)();
         const now = firestore_1.Timestamp.now();
         // Update session lastSeenAt
         const sessionRef = db.collection(`users/${userId}/userSessions`).doc(sessionId);
         const sessionDoc = await sessionRef.get();
         if (!sessionDoc.exists) {
+            firebase_functions_1.logger.error(`Session not found: ${sessionId} for user: ${userId}`);
             throw new https_1.HttpsError('not-found', 'Session not found');
         }
+        firebase_functions_1.logger.info(`Session found, updating heartbeat data`);
         // Prepare update data
         const updateData = {
             lastSeenAt: now,
@@ -39,11 +41,24 @@ exports.updateSessionHeartbeat = (0, https_1.onCall)(config_1.callableFunctionOp
             updateData.orientation = orientation;
         }
         await sessionRef.update(updateData);
-        // Also update device lastSeenAt
-        const deviceRef = db.collection(`users/${userId}/devices`).doc(deviceId);
-        await deviceRef.update({
-            lastSeenAt: now,
-        });
+        // Also update device lastSeenAt (if device exists)
+        try {
+            const deviceRef = db.collection(`users/${userId}/devices`).doc(deviceId);
+            const deviceDoc = await deviceRef.get();
+            if (deviceDoc.exists) {
+                await deviceRef.update({
+                    lastSeenAt: now,
+                });
+                firebase_functions_1.logger.info(`Updated device lastSeenAt for device: ${deviceId}`);
+            }
+            else {
+                firebase_functions_1.logger.warn(`Device not found for heartbeat update: ${deviceId}`);
+            }
+        }
+        catch (deviceError) {
+            firebase_functions_1.logger.error(`Error updating device lastSeenAt: ${deviceError}`);
+            // Don't fail the entire heartbeat if device update fails
+        }
         firebase_functions_1.logger.info(`Updated heartbeat for session: ${sessionId}`);
         return {
             success: true,

@@ -22,7 +22,7 @@ export const updateSessionHeartbeat = onCall(callableFunctionOptions, async (req
   }
 
   try {
-    logger.info(`Updating heartbeat for session: ${sessionId}, user: ${userId}`);
+    logger.info(`Updating heartbeat for session: ${sessionId}, user: ${userId}, deviceId: ${deviceId}, orientation: ${orientation}`);
 
     const db = getFirestore();
     const now = Timestamp.now();
@@ -32,8 +32,11 @@ export const updateSessionHeartbeat = onCall(callableFunctionOptions, async (req
     const sessionDoc = await sessionRef.get();
 
     if (!sessionDoc.exists) {
+      logger.error(`Session not found: ${sessionId} for user: ${userId}`);
       throw new HttpsError('not-found', 'Session not found');
     }
+
+    logger.info(`Session found, updating heartbeat data`);
 
     // Prepare update data
     const updateData: any = {
@@ -47,11 +50,23 @@ export const updateSessionHeartbeat = onCall(callableFunctionOptions, async (req
 
     await sessionRef.update(updateData);
 
-    // Also update device lastSeenAt
-    const deviceRef = db.collection(`users/${userId}/devices`).doc(deviceId);
-    await deviceRef.update({
-      lastSeenAt: now,
-    });
+    // Also update device lastSeenAt (if device exists)
+    try {
+      const deviceRef = db.collection(`users/${userId}/devices`).doc(deviceId);
+      const deviceDoc = await deviceRef.get();
+      
+      if (deviceDoc.exists) {
+        await deviceRef.update({
+          lastSeenAt: now,
+        });
+        logger.info(`Updated device lastSeenAt for device: ${deviceId}`);
+      } else {
+        logger.warn(`Device not found for heartbeat update: ${deviceId}`);
+      }
+    } catch (deviceError) {
+      logger.error(`Error updating device lastSeenAt: ${deviceError}`);
+      // Don't fail the entire heartbeat if device update fails
+    }
 
     logger.info(`Updated heartbeat for session: ${sessionId}`);
     return { 
