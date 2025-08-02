@@ -123,12 +123,12 @@ async function getLocationAndNetworkFromIP(ipAddress: string) {
     } catch (error) {
       console.warn(`[getLocationAndNetworkFromIP] ip-api.com failed:`, error instanceof Error ? error.message : String(error));
       
-      // Fallback to ipapi.co
+      // Fallback to FindIP API (free and comprehensive)
       try {
         const controller2 = new AbortController();
         const timeoutId2 = setTimeout(() => controller2.abort(), 10000);
         
-        const response2 = await fetch(`https://ipapi.co/${ipAddress}/json/`, {
+        const response2 = await fetch(`https://findip.net/${ipAddress}/?token=free`, {
           signal: controller2.signal,
           headers: {
             'User-Agent': 'Revival-App/1.0',
@@ -139,31 +139,33 @@ async function getLocationAndNetworkFromIP(ipAddress: string) {
         clearTimeout(timeoutId2);
         
         if (response2.ok) {
-          const ipApiData = await response2.json();
-          // Convert ipapi.co format to ip-api.com format
+          const findIpData = await response2.json();
+          // Convert FindIP format to ip-api.com format
           data = {
             status: 'success',
-            country: ipApiData.country_name,
-            countryCode: ipApiData.country_code,
-            region: ipApiData.region,
-            regionName: ipApiData.region,
-            city: ipApiData.city,
-            timezone: ipApiData.timezone,
-            offset: ipApiData.utc_offset ? parseInt(ipApiData.utc_offset.replace(':', '')) : 0,
-            isp: ipApiData.org,
-            as: ipApiData.asn,
-            org: ipApiData.org,
-            query: ipAddress
+            country: findIpData.country?.names?.en || findIpData.country_name,
+            countryCode: findIpData.country?.iso_code || findIpData.country_code,
+            region: findIpData.subdivisions?.[0]?.names?.en || findIpData.region,
+            regionName: findIpData.subdivisions?.[0]?.names?.en || findIpData.region,
+            city: findIpData.city?.names?.en || findIpData.city,
+            timezone: findIpData.location?.time_zone || findIpData.timezone,
+            offset: findIpData.location?.time_zone_offset || 0,
+            isp: findIpData.traits?.isp || findIpData.isp || findIpData.organization,
+            as: findIpData.traits?.autonomous_system_organization || findIpData.asn,
+            org: findIpData.traits?.organization || findIpData.organization,
+            query: ipAddress,
+            lat: findIpData.location?.latitude,
+            lon: findIpData.location?.longitude
           };
-          apiUsed = 'ipapi.co';
-          console.log(`[getLocationAndNetworkFromIP] ipapi.co response converted:`, JSON.stringify(data, null, 2));
+          apiUsed = 'findip.net';
+          console.log(`[getLocationAndNetworkFromIP] findip.net response converted:`, JSON.stringify(data, null, 2));
         }
       } catch (error2) {
         console.error(`[getLocationAndNetworkFromIP] Both APIs failed:`, error2 instanceof Error ? error2.message : String(error2));
       }
     }
     
-    if (data && (data.status === 'success' || apiUsed === 'ipapi.co')) {
+    if (data && (data.status === 'success' || apiUsed === 'findip.net')) {
       console.log(`[getLocationAndNetworkFromIP] Successfully got data from ${apiUsed}`);
       
       // Get hostname via reverse DNS lookup (with error handling)
