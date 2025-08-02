@@ -13,44 +13,69 @@ async function getHostnameFromIP(ipAddress) {
         if (ipAddress === 'unknown' || ipAddress === '127.0.0.1' || ipAddress === '::1') {
             return null;
         }
-        const hostnames = await reverseLookup(ipAddress);
-        return Array.isArray(hostnames) && hostnames.length > 0 ? hostnames[0] : null;
+        console.log(`[getHostnameFromIP] Attempting reverse DNS lookup for: ${ipAddress}`);
+        // Set a timeout for DNS lookup
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('DNS lookup timeout')), 5000);
+        });
+        const lookupPromise = reverseLookup(ipAddress);
+        const hostnames = await Promise.race([lookupPromise, timeoutPromise]);
+        if (Array.isArray(hostnames) && hostnames.length > 0) {
+            console.log(`[getHostnameFromIP] Resolved hostname: ${hostnames[0]}`);
+            return hostnames[0];
+        }
+        console.log(`[getHostnameFromIP] No hostname found for IP: ${ipAddress}`);
+        return null;
     }
     catch (error) {
-        // Failed to get hostname for IP
+        console.log(`[getHostnameFromIP] Failed to resolve hostname for ${ipAddress}:`, error instanceof Error ? error.message : String(error));
         return null;
     }
 }
 // Helper function to get location and network info from IP address
 async function getLocationAndNetworkFromIP(ipAddress) {
-    // Fallback data
+    console.log(`[getLocationAndNetworkFromIP] Processing IP: ${ipAddress}`);
+    // Enhanced fallback data with more meaningful defaults
     const fallbackData = {
         location: {
             country: 'Unknown',
             countryCode: 'XX',
-            region: null,
-            city: null,
+            region: 'Unknown',
+            city: 'Unknown',
             timezone: 'UTC',
             timezoneOffset: 0
         },
         network: {
-            hostname: null,
-            isp: null,
-            asn: null
+            hostname: 'Unknown',
+            isp: 'Unknown ISP',
+            asn: 'Unknown ASN'
         }
     };
     try {
-        // Skip API call for local/unknown IPs
-        if (!ipAddress || ipAddress === 'unknown' || ipAddress === '127.0.0.1' || ipAddress === '::1' || ipAddress.startsWith('192.168.') || ipAddress.startsWith('10.') || ipAddress.startsWith('172.')) {
+        // Only skip API call for truly local/invalid IPs
+        if (!ipAddress || ipAddress === 'unknown' || ipAddress === '127.0.0.1' || ipAddress === '::1') {
+            console.log(`[getLocationAndNetworkFromIP] Skipping local/invalid IP: ${ipAddress}`);
             return fallbackData;
         }
+        // Check for private IP ranges more precisely
+        const isPrivateIP = ipAddress.startsWith('192.168.') ||
+            ipAddress.startsWith('10.') ||
+            (ipAddress.startsWith('172.') &&
+                parseInt(ipAddress.split('.')[1]) >= 16 &&
+                parseInt(ipAddress.split('.')[1]) <= 31);
+        if (isPrivateIP) {
+            console.log(`[getLocationAndNetworkFromIP] Skipping private IP: ${ipAddress}`);
+            return fallbackData;
+        }
+        console.log(`[getLocationAndNetworkFromIP] Making API call for IP: ${ipAddress}`);
         // Using a free IP geolocation service with timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-        const response = await fetch(`https://ip-api.com/json/${ipAddress}?fields=status,country,countryCode,region,city,timezone,offset,isp,as,org`, {
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased to 10 second timeout
+        const response = await fetch(`https://ip-api.com/json/${ipAddress}?fields=status,country,countryCode,region,city,timezone,offset,isp,as,org,query`, {
             signal: controller.signal,
             headers: {
-                'User-Agent': 'Revival-App/1.0'
+                'User-Agent': 'Revival-App/1.0',
+                'Accept': 'application/json'
             }
         });
         clearTimeout(timeoutId);
@@ -58,35 +83,43 @@ async function getLocationAndNetworkFromIP(ipAddress) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         const data = await response.json();
+        console.log(`[getLocationAndNetworkFromIP] API response:`, JSON.stringify(data, null, 2));
         if (data.status === 'success') {
             // Get hostname via reverse DNS lookup (with error handling)
-            let hostname = null;
+            let hostname = 'Unknown';
             try {
-                hostname = await getHostnameFromIP(ipAddress);
+                const resolvedHostname = await getHostnameFromIP(ipAddress);
+                hostname = resolvedHostname || `${data.isp || 'Unknown'} Network`;
             }
             catch (error) {
-                // Ignore hostname lookup errors
+                hostname = `${data.isp || 'Unknown'} Network`;
             }
-            return {
+            const result = {
                 location: {
                     country: data.country || 'Unknown',
                     countryCode: data.countryCode || 'XX',
-                    region: data.region || null,
-                    city: data.city || null,
+                    region: data.region || data.regionName || 'Unknown',
+                    city: data.city || 'Unknown',
                     timezone: data.timezone || 'UTC',
-                    timezoneOffset: data.offset || 0
+                    timezoneOffset: typeof data.offset === 'number' ? data.offset : 0
                 },
                 network: {
                     hostname: hostname,
-                    isp: data.isp || null,
-                    asn: data.as || null
+                    isp: data.isp || data.org || 'Unknown ISP',
+                    asn: data.as || 'Unknown ASN'
                 }
             };
+            console.log(`[getLocationAndNetworkFromIP] Successful result:`, JSON.stringify(result, null, 2));
+            return result;
+        }
+        else {
+            console.warn(`[getLocationAndNetworkFromIP] API returned failure status:`, data);
         }
     }
     catch (error) {
-        console.warn('Failed to get location and network from IP:', error instanceof Error ? error.message : String(error));
+        console.error(`[getLocationAndNetworkFromIP] Error processing IP ${ipAddress}:`, error instanceof Error ? error.message : String(error));
     }
+    console.log(`[getLocationAndNetworkFromIP] Returning fallback data for IP: ${ipAddress}`);
     return fallbackData;
 }
 exports.createSessionEnhanced = (0, https_1.onCall)(config_1.callableFunctionOptions, async (request) => {
@@ -104,14 +137,18 @@ exports.createSessionEnhanced = (0, https_1.onCall)(config_1.callableFunctionOpt
         const db = (0, firestore_1.getFirestore)();
         const now = firestore_1.Timestamp.now();
         const userId = request.auth.uid;
-        // Get client IP address
+        // Get client IP address with detailed logging
         const rawIP = request.rawRequest.ip ||
             request.rawRequest.headers['x-forwarded-for'] ||
             ((_a = request.rawRequest.connection) === null || _a === void 0 ? void 0 : _a.remoteAddress) ||
             'unknown';
         const ipAddress = Array.isArray(rawIP) ? rawIP[0] : rawIP;
+        console.log(`[createSessionEnhanced] Detected IP address: ${ipAddress} (raw: ${JSON.stringify(rawIP)})`);
         // Get location and network data from IP
+        console.log(`[createSessionEnhanced] Fetching location and network data for IP: ${ipAddress}`);
         const { location: locationData, network: networkData } = await getLocationAndNetworkFromIP(ipAddress);
+        console.log(`[createSessionEnhanced] Location data:`, JSON.stringify(locationData, null, 2));
+        console.log(`[createSessionEnhanced] Network data:`, JSON.stringify(networkData, null, 2));
         // Generate session ID
         const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         // Create session document
@@ -139,8 +176,9 @@ exports.createSessionEnhanced = (0, https_1.onCall)(config_1.callableFunctionOpt
             security,
             network: networkData
         };
+        console.log(`[createSessionEnhanced] Final session data:`, JSON.stringify(sessionData, null, 2));
         await sessionRef.set(sessionData);
-        // Enhanced session created successfully
+        console.log(`[createSessionEnhanced] Session ${sessionId} created successfully for user ${userId}`);
         return {
             success: true,
             sessionId,
