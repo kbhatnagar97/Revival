@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { callableFunctionOptions } from '../lib/config';
-import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+import { db, Timestamp } from '../lib/firebase';
 import { logger } from 'firebase-functions';
 
 /**
@@ -24,7 +24,6 @@ export const updateSessionHeartbeat = onCall(callableFunctionOptions, async (req
   try {
     logger.info(`Updating heartbeat for session: ${sessionId}, user: ${userId}, deviceId: ${deviceId}, orientation: ${orientation}`);
 
-    const db = getFirestore();
     const now = Timestamp.now();
 
     // Update session lastSeenAt
