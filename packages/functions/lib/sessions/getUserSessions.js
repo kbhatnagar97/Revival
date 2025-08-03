@@ -18,13 +18,13 @@ exports.getUserSessions = (0, https_1.onCall)(config_1.callableFunctionOptions, 
         firebase_functions_1.logger.info(`Getting sessions for user: ${userId}`);
         // Get all sessions for the user
         const sessionsRef = firebase_1.db.collection(`users/${userId}/userSessions`);
-        const sessionsSnapshot = await sessionsRef.orderBy('loginAt', 'desc').get();
+        const sessionsSnapshot = await sessionsRef.orderBy('sessionStart', 'desc').get();
         const sessions = sessionsSnapshot.docs.map(doc => {
-            var _a, _b;
+            var _a, _b, _c;
             const data = doc.data();
             return Object.assign(Object.assign({ id: doc.id }, data), { 
                 // Convert timestamps for frontend compatibility
-                loginAt: (_a = data.loginAt) === null || _a === void 0 ? void 0 : _a.toDate().toISOString(), lastSeenAt: (_b = data.lastSeenAt) === null || _b === void 0 ? void 0 : _b.toDate().toISOString() });
+                sessionStart: (_a = data.sessionStart) === null || _a === void 0 ? void 0 : _a.toDate().toISOString(), lastSeenAt: (_b = data.lastSeenAt) === null || _b === void 0 ? void 0 : _b.toDate().toISOString(), sessionEnd: ((_c = data.sessionEnd) === null || _c === void 0 ? void 0 : _c.toDate().toISOString()) || null });
         });
         firebase_functions_1.logger.info(`Retrieved ${sessions.length} sessions for user: ${userId}`);
         return sessions;

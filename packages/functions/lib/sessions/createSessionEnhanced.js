@@ -34,6 +34,7 @@ async function getHostnameFromIP(ipAddress) {
 }
 // Helper function to get location and network info from IP address
 async function getLocationAndNetworkFromIP(ipAddress) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
     console.log(`[getLocationAndNetworkFromIP] Processing IP: ${ipAddress}`);
     // Minimal fallback data - only used when APIs completely fail
     const fallbackData = {
@@ -87,11 +88,11 @@ async function getLocationAndNetworkFromIP(ipAddress) {
         }
         catch (error) {
             console.warn(`[getLocationAndNetworkFromIP] ip-api.com failed:`, error instanceof Error ? error.message : String(error));
-            // Fallback to ipapi.co
+            // Fallback to FindIP API (free and comprehensive)
             try {
                 const controller2 = new AbortController();
                 const timeoutId2 = setTimeout(() => controller2.abort(), 10000);
-                const response2 = await fetch(`https://ipapi.co/${ipAddress}/json/`, {
+                const response2 = await fetch(`https://findip.net/${ipAddress}/?token=free`, {
                     signal: controller2.signal,
                     headers: {
                         'User-Agent': 'Revival-App/1.0',
@@ -100,31 +101,33 @@ async function getLocationAndNetworkFromIP(ipAddress) {
                 });
                 clearTimeout(timeoutId2);
                 if (response2.ok) {
-                    const ipApiData = await response2.json();
-                    // Convert ipapi.co format to ip-api.com format
+                    const findIpData = await response2.json();
+                    // Convert FindIP format to ip-api.com format
                     data = {
                         status: 'success',
-                        country: ipApiData.country_name,
-                        countryCode: ipApiData.country_code,
-                        region: ipApiData.region,
-                        regionName: ipApiData.region,
-                        city: ipApiData.city,
-                        timezone: ipApiData.timezone,
-                        offset: ipApiData.utc_offset ? parseInt(ipApiData.utc_offset.replace(':', '')) : 0,
-                        isp: ipApiData.org,
-                        as: ipApiData.asn,
-                        org: ipApiData.org,
-                        query: ipAddress
+                        country: ((_b = (_a = findIpData.country) === null || _a === void 0 ? void 0 : _a.names) === null || _b === void 0 ? void 0 : _b.en) || findIpData.country_name,
+                        countryCode: ((_c = findIpData.country) === null || _c === void 0 ? void 0 : _c.iso_code) || findIpData.country_code,
+                        region: ((_f = (_e = (_d = findIpData.subdivisions) === null || _d === void 0 ? void 0 : _d[0]) === null || _e === void 0 ? void 0 : _e.names) === null || _f === void 0 ? void 0 : _f.en) || findIpData.region,
+                        regionName: ((_j = (_h = (_g = findIpData.subdivisions) === null || _g === void 0 ? void 0 : _g[0]) === null || _h === void 0 ? void 0 : _h.names) === null || _j === void 0 ? void 0 : _j.en) || findIpData.region,
+                        city: ((_l = (_k = findIpData.city) === null || _k === void 0 ? void 0 : _k.names) === null || _l === void 0 ? void 0 : _l.en) || findIpData.city,
+                        timezone: ((_m = findIpData.location) === null || _m === void 0 ? void 0 : _m.time_zone) || findIpData.timezone,
+                        offset: ((_o = findIpData.location) === null || _o === void 0 ? void 0 : _o.time_zone_offset) || 0,
+                        isp: ((_p = findIpData.traits) === null || _p === void 0 ? void 0 : _p.isp) || findIpData.isp || findIpData.organization,
+                        as: ((_q = findIpData.traits) === null || _q === void 0 ? void 0 : _q.autonomous_system_organization) || findIpData.asn,
+                        org: ((_r = findIpData.traits) === null || _r === void 0 ? void 0 : _r.organization) || findIpData.organization,
+                        query: ipAddress,
+                        lat: (_s = findIpData.location) === null || _s === void 0 ? void 0 : _s.latitude,
+                        lon: (_t = findIpData.location) === null || _t === void 0 ? void 0 : _t.longitude
                     };
-                    apiUsed = 'ipapi.co';
-                    console.log(`[getLocationAndNetworkFromIP] ipapi.co response converted:`, JSON.stringify(data, null, 2));
+                    apiUsed = 'findip.net';
+                    console.log(`[getLocationAndNetworkFromIP] findip.net response converted:`, JSON.stringify(data, null, 2));
                 }
             }
             catch (error2) {
                 console.error(`[getLocationAndNetworkFromIP] Both APIs failed:`, error2 instanceof Error ? error2.message : String(error2));
             }
         }
-        if (data && (data.status === 'success' || apiUsed === 'ipapi.co')) {
+        if (data && (data.status === 'success' || apiUsed === 'findip.net')) {
             console.log(`[getLocationAndNetworkFromIP] Successfully got data from ${apiUsed}`);
             // Get hostname via reverse DNS lookup (with error handling)
             let hostname = null;
@@ -200,8 +203,10 @@ exports.createSessionEnhanced = (0, https_1.onCall)(config_1.callableFunctionOpt
             .doc(sessionId);
         const sessionData = {
             deviceId,
-            loginAt: now,
+            sessionStart: now,
             lastSeenAt: now,
+            sessionEnd: null, // Will be set when session ends
+            isActive: true,
             ipAddress,
             browser,
             orientation,
@@ -261,8 +266,9 @@ exports.createSession = (0, https_1.onCall)(config_1.callableFunctionOptions, as
             .doc(sessionId);
         const sessionData = {
             deviceId,
-            loginAt: now,
+            sessionStart: now,
             lastSeenAt: now,
+            sessionEnd: null,
             ipAddress,
             userAgent: userAgent || 'Unknown',
             isActive: true,

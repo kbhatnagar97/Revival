@@ -35,6 +35,7 @@ export { createSession } from './sessions/createSession';
 export { updateSessionHeartbeat } from './sessions/updateSessionHeartbeat';
 export { getUserSessions } from './sessions/getUserSessions';
 export { cleanupOldSessions } from './sessions/cleanupOldSessions';
+export { endSession } from './sessions/endSession';
 
 // Enhanced Session Functions
 export { createSessionEnhanced, detectUserLocation } from './sessions/createSessionEnhanced';

@@ -19,7 +19,7 @@ export const getUserSessions = onCall(callableFunctionOptions, async (request) =
 
     // Get all sessions for the user
     const sessionsRef = db.collection(`users/${userId}/userSessions`);
-    const sessionsSnapshot = await sessionsRef.orderBy('loginAt', 'desc').get();
+    const sessionsSnapshot = await sessionsRef.orderBy('sessionStart', 'desc').get();
 
     const sessions = sessionsSnapshot.docs.map(doc => {
       const data = doc.data();
@@ -27,8 +27,9 @@ export const getUserSessions = onCall(callableFunctionOptions, async (request) =
         id: doc.id,
         ...data,
         // Convert timestamps for frontend compatibility
-        loginAt: data.loginAt?.toDate().toISOString(),
+        sessionStart: data.sessionStart?.toDate().toISOString(),
         lastSeenAt: data.lastSeenAt?.toDate().toISOString(),
+        sessionEnd: data.sessionEnd?.toDate().toISOString() || null,
       };
     });
 

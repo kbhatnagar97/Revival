@@ -1,7 +1,7 @@
 "use strict";
 // Core Cloud Functions as specified in CLOUD_FUNCTIONS_IMPLEMENTATION_PLAN.md
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.revokeConsent = exports.updateConsentPreferences = exports.getConsentHistory = exports.storeConsentRecord = exports.detectUserLocation = exports.createSessionEnhanced = exports.cleanupOldSessions = exports.getUserSessions = exports.updateSessionHeartbeat = exports.createSession = exports.cleanupInactiveDevices = exports.getUserDevices = exports.registerDevice = exports.cleanupOldHabitEntries = exports.migrateToDailyEntries = exports.recalculateSummary = exports.onHabitEntryWrite = exports.onHabitDelete = exports.onHabitUpdate = exports.deleteHabitEntry = exports.updateHabitEntry = exports.getHabitEntriesForHabit = exports.getHabitEntries = exports.reorderHabits = exports.deleteHabit = exports.updateHabit = exports.createHabit = exports.getUserHabits = exports.onUserCreate = void 0;
+exports.revokeConsent = exports.updateConsentPreferences = exports.getConsentHistory = exports.storeConsentRecord = exports.detectUserLocation = exports.createSessionEnhanced = exports.endSession = exports.cleanupOldSessions = exports.getUserSessions = exports.updateSessionHeartbeat = exports.createSession = exports.cleanupInactiveDevices = exports.getUserDevices = exports.registerDevice = exports.cleanupOldHabitEntries = exports.migrateToDailyEntries = exports.recalculateSummary = exports.onHabitEntryWrite = exports.onHabitDelete = exports.onHabitUpdate = exports.deleteHabitEntry = exports.updateHabitEntry = exports.getHabitEntriesForHabit = exports.getHabitEntries = exports.reorderHabits = exports.deleteHabit = exports.updateHabit = exports.createHabit = exports.getUserHabits = exports.onUserCreate = void 0;
 // User Functions
 var onUserCreate_1 = require("./users/onUserCreate");
 Object.defineProperty(exports, "onUserCreate", { enumerable: true, get: function () { return onUserCreate_1.onUserCreate; } });
@@ -54,6 +54,8 @@ var getUserSessions_1 = require("./sessions/getUserSessions");
 Object.defineProperty(exports, "getUserSessions", { enumerable: true, get: function () { return getUserSessions_1.getUserSessions; } });
 var cleanupOldSessions_1 = require("./sessions/cleanupOldSessions");
 Object.defineProperty(exports, "cleanupOldSessions", { enumerable: true, get: function () { return cleanupOldSessions_1.cleanupOldSessions; } });
+var endSession_1 = require("./sessions/endSession");
+Object.defineProperty(exports, "endSession", { enumerable: true, get: function () { return endSession_1.endSession; } });
 // Enhanced Session Functions
 var createSessionEnhanced_1 = require("./sessions/createSessionEnhanced");
 Object.defineProperty(exports, "createSessionEnhanced", { enumerable: true, get: function () { return createSessionEnhanced_1.createSessionEnhanced; } });

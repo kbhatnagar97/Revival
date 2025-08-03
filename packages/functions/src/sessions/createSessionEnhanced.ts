@@ -258,8 +258,10 @@ export const createSessionEnhanced = onCall(
 
       const sessionData = {
         deviceId,
-        loginAt: now,
+        sessionStart: now,
         lastSeenAt: now,
+        sessionEnd: null, // Will be set when session ends
+        isActive: true,
         ipAddress,
         browser,
         orientation,
@@ -334,8 +336,9 @@ export const createSession = onCall(
 
       const sessionData = {
         deviceId,
-        loginAt: now,
+        sessionStart: now,
         lastSeenAt: now,
+        sessionEnd: null,
         ipAddress,
         userAgent: userAgent || 'Unknown',
         isActive: true,

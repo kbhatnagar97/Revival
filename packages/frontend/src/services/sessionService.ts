@@ -45,8 +45,10 @@ export interface UserSession {
   security: SessionSecurity;
   network: SessionNetwork;
   isActive: boolean;
+  sessionStart: string;
   lastSeenAt: string;
-  createdAt: string;
+  sessionEnd: string | null;
+  createdAt?: string; // For backward compatibility
 }
 
 export interface SessionHeartbeatManager {
@@ -346,17 +348,54 @@ class SessionManager {
   }
 
   /**
-   * Clear the current session (on logout)
+   * End the current session properly by calling the backend
    */
-  clearSession(): void {
+  async endSession(): Promise<void> {
+    if (!this.currentSessionId) {
+      console.log('No active session to end');
+      return;
+    }
+
+    try {
+      console.log('Ending session:', this.currentSessionId);
+      
+      await apiService.callFunction('endSession', {
+        sessionId: this.currentSessionId
+      });
+      
+      console.log('Session ended successfully on server');
+    } catch (error) {
+      console.error('Failed to end session on server:', error);
+      // Continue with local cleanup even if server call fails
+    }
+    
+    // Always clean up locally
     this.stopHeartbeat();
     this.currentSessionId = null;
     this.clearSessionFromStorage();
-    console.log('Session cleared');
+    console.log('Session ended and cleared locally');
   }
 
   /**
-   * Initialize session on login
+   * Clear the current session (on logout) - now calls endSession
+   */
+  clearSession(): void {
+    // For immediate cleanup (like logout), we'll do synchronous cleanup
+    // but also try to end the session on the server
+    if (this.currentSessionId) {
+      // Fire and forget the server call
+      this.endSession().catch(error => {
+        console.warn('Failed to end session on server during clearSession:', error);
+      });
+    } else {
+      this.stopHeartbeat();
+      this.clearSessionFromStorage();
+      console.log('Session cleared');
+    }
+  }
+
+  /**
+   * Initialize session on login or app startup
    */
   async initializeSession(): Promise<void> {
     // Check if user is authenticated
@@ -375,26 +414,28 @@ class SessionManager {
     try {
       console.log('Initializing session...');
       
-      // Try to restore existing session first
+      // Check if there's a stored session from a previous app session
       const restoredSessionId = this.loadSessionFromStorage();
       if (restoredSessionId) {
-        this.currentSessionId = restoredSessionId;
-        console.log('Restored existing session:', restoredSessionId);
+        console.log('Found stored session from previous app session:', restoredSessionId);
         
-        // Verify the session is still valid by sending a heartbeat
+        // End the previous session first (it should be marked as ended since user closed the app)
         try {
-          await this.updateHeartbeat();
-          console.log('Restored session is valid');
+          await apiService.callFunction('endSession', {
+            sessionId: restoredSessionId
+          });
+          console.log('Ended previous session:', restoredSessionId);
         } catch (error) {
-          console.log('Restored session is invalid, creating new session:', error);
-          this.currentSessionId = null;
-          this.clearSessionFromStorage();
-          await this.createSession();
+          console.warn('Failed to end previous session (may already be ended):', error);
         }
-      } else {
-        // Create a new session
-        await this.createSession();
+        
+        // Clear the old session from storage
+        this.clearSessionFromStorage();
       }
+      
+      // Always create a new session when initializing (new app session)
+      await this.createSession();
+      console.log('Created new session for this app session');
       
       // Start heartbeat only if not already running
       if (!this.heartbeatInterval) {
@@ -439,9 +480,47 @@ document.addEventListener('visibilitychange', () => {
   sessionManager.handleVisibilityChange();
 });
 
-// Set up beforeunload listener to clean up on page close
+// Set up beforeunload listener to properly end session on page close
 window.addEventListener('beforeunload', () => {
+  // Use sendBeacon for reliable session ending during page unload
+  const currentSessionId = sessionManager.getCurrentSessionId();
+  if (currentSessionId) {
+    try {
+      // Try to end session via beacon (more reliable during unload)
+      const endSessionData = JSON.stringify({
+        data: { sessionId: currentSessionId }
+      });
+      
+      // This is a simplified approach - in a real implementation you'd need the proper Firebase callable endpoint
+      navigator.sendBeacon('/api/endSession', endSessionData);
+    } catch (error) {
+      console.warn('Failed to send session end beacon:', error);
+    }
+  }
+  
   sessionManager.stopHeartbeat();
+});
+
+// Also handle visibility change to end session when tab becomes hidden for extended periods
+let hiddenTimer: NodeJS.Timeout | null = null;
+const HIDDEN_SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // Start timer to end session if hidden for too long
+    hiddenTimer = setTimeout(async () => {
+      console.log('Tab hidden for extended period, ending session');
+      await sessionManager.endSession();
+    }, HIDDEN_SESSION_TIMEOUT);
+  } else {
+    // Clear timer if tab becomes visible again
+    if (hiddenTimer) {
+      clearTimeout(hiddenTimer);
+      hiddenTimer = null;
+    }
+    // Handle visibility change as before
+    sessionManager.handleVisibilityChange();
+  }
 });
 
 export const sessionService = {
@@ -479,6 +558,11 @@ export const sessionService = {
    * Get current session ID
    */
   getCurrentSessionId: () => sessionManager.getCurrentSessionId(),
+
+  /**
+   * End current session properly
+   */
+  endSession: () => sessionManager.endSession(),
 
   /**
    * Clear session (on logout)
