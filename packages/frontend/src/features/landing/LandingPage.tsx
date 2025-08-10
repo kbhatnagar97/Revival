@@ -54,9 +54,7 @@ const LandingPage: React.FC = () => {
       {/* Header with Auth Button */}
       <header className='landing-header'>
         <div className='landing-header__content'>
-          <div className='landing-header__logo'>
-            Revival
-          </div>
+          <div className='landing-header__logo'>Revival</div>
           <div className='landing-header__auth'>
             <AuthButton onClick={() => setIsAuthModalOpen(true)} />
           </div>
