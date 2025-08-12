@@ -94,15 +94,16 @@ export const onUserCreate = onCall(callableFunctionOptions, async (request) => {
     }
 
     // Create new user document matching DATABASE_SCHEMA.md
+    // Only include optional fields if they are defined to avoid Firestore undefined errors
     const userDoc: UserDocument = {
       email: userEmail,
       displayName: userName,
-      picture: userPhoto || undefined,
+      ...(userPhoto ? { picture: userPhoto } : {}),
       provider: userProvider,
       createdAt: Timestamp.now(),
       timezone: 'Asia/Kolkata', // Default timezone (Delhi/India)
       lastSeenAt: Timestamp.now(),
-    };
+    } as UserDocument;
 
     await db.collection('users').doc(uid).set(userDoc);
 

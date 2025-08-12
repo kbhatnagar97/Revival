@@ -24,6 +24,19 @@ export const authService = {
   signInWithEmail: async (email: string, password: string) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     
+    // Ensure user document exists/updates in Firestore (idempotent)
+    try {
+      await apiService.callFunction('onUserCreate', {
+        email: userCredential.user.email,
+        displayName: userCredential.user.displayName,
+        provider: 'password',
+        photoURL: userCredential.user.photoURL,
+      });
+    } catch (error) {
+      // Non-blocking: auth succeeded; doc creation can be retried by AuthProvider
+      console.warn('onUserCreate on sign-in failed (non-blocking):', error);
+    }
+    
     // Device and session tracking will be initialized by AuthProvider
     
     return userCredential.user;
