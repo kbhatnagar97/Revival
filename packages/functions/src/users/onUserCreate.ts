@@ -46,7 +46,14 @@ export const onUserCreate = onCall(callableFunctionOptions, async (request) => {
 
     // Get user email from auth token if not provided in data
     const userEmail = email || request.auth.token.email || '';
-    const userName = displayName || request.auth.token.name || '';
+    // Derive a reasonable fallback name from email if not provided
+    let userName = displayName || request.auth.token.name || '';
+    if (!userName && userEmail) {
+      const usernamePart = userEmail.split('@')[0] || 'User';
+      userName = usernamePart
+        .replace(/[._-]/g, ' ')
+        .replace(/\b\w/g, (letter: string) => letter.toUpperCase());
+    }
     const userPhoto = photoURL || request.auth.token.picture;
     
     // Determine provider from auth token if not provided
@@ -63,9 +70,10 @@ export const onUserCreate = onCall(callableFunctionOptions, async (request) => {
       throw new HttpsError('invalid-argument', 'Email is required for user creation');
     }
 
+    // If still no name, use generic fallback rather than failing
     if (!userName) {
-      logger.error('No display name provided for user creation', { uid, userData });
-      throw new HttpsError('invalid-argument', 'Display name is required for user creation');
+      logger.warn('No display name provided; using generic fallback name', { uid, userData });
+      userName = 'User';
     }
 
     // Check if user document already exists

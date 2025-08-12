@@ -33,7 +33,14 @@ exports.onUserCreate = (0, https_1.onCall)(config_1.callableFunctionOptions, asy
         });
         // Get user email from auth token if not provided in data
         const userEmail = email || request.auth.token.email || '';
-        const userName = displayName || request.auth.token.name || '';
+        // Derive a reasonable fallback name from email if not provided
+        let userName = displayName || request.auth.token.name || '';
+        if (!userName && userEmail) {
+            const usernamePart = userEmail.split('@')[0] || 'User';
+            userName = usernamePart
+                .replace(/[._-]/g, ' ')
+                .replace(/\b\w/g, (letter) => letter.toUpperCase());
+        }
         const userPhoto = photoURL || request.auth.token.picture;
         // Determine provider from auth token if not provided
         let userProvider = 'password';
@@ -48,9 +55,10 @@ exports.onUserCreate = (0, https_1.onCall)(config_1.callableFunctionOptions, asy
             firebase_functions_1.logger.error('No email provided for user creation', { uid, userData });
             throw new https_1.HttpsError('invalid-argument', 'Email is required for user creation');
         }
+        // If still no name, use generic fallback rather than failing
         if (!userName) {
-            firebase_functions_1.logger.error('No display name provided for user creation', { uid, userData });
-            throw new https_1.HttpsError('invalid-argument', 'Display name is required for user creation');
+            firebase_functions_1.logger.warn('No display name provided; using generic fallback name', { uid, userData });
+            userName = 'User';
         }
         // Check if user document already exists
         const existingDoc = await firebase_1.db.collection('users').doc(uid).get();

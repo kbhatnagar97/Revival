@@ -7,7 +7,13 @@ import React, {
 import { authService } from '../../services/authService';
 import { deviceService } from '../../services/deviceService';
 import { sessionService } from '../../services/sessionService';
-import { consentService, type ConsentRequirements, type GDPRConsent, type CCPAConsent } from '../../services/consentService';
+import {
+  consentService,
+  type ConsentRequirements,
+  type GDPRConsent,
+  type CCPAConsent,
+} from '../../services/consentService';
+import { apiService } from '../../services/apiService';
 import { ConsentModal } from '../components/ConsentModal';
 import { ConsentBanner } from '../components/ConsentBanner';
 import type { User as FirebaseUser } from 'firebase/auth';
@@ -56,14 +62,14 @@ const convertFirebaseUser = (firebaseUser: FirebaseUser): User => {
   // Fix Google profile picture URL to avoid CORS issues
   const fixGooglePhotoURL = (photoURL: string | null): string | undefined => {
     if (!photoURL) return undefined;
-    
+
     // If it's a Google profile picture, try to fix common issues
     if (photoURL.includes('googleusercontent.com')) {
       // The URL might already be in the right format, so let's try it as-is first
       // If it fails, the onError handler will show the fallback
       return photoURL;
     }
-    
+
     return photoURL;
   };
 
@@ -100,10 +106,10 @@ const initializeDeviceAndSessionWithConsent = async (
   }
 
   setIsInitializing(true);
-  
+
   try {
     const hasValidConsent = consentService.hasValidConsent(consentRequirements);
-    
+
     // Only initialize if consent allows or is not required
     if (hasValidConsent || !consentRequirements.required) {
       // Get current user for enhanced device registration
@@ -112,13 +118,15 @@ const initializeDeviceAndSessionWithConsent = async (
         // Register the device with enhanced data according to DATABASE_SCHEMA.md
         await deviceService.registerDevice(currentUser.uid);
         console.log('Device registered successfully with enhanced data');
-        
+
         // Initialize session tracking only if not already running
         if (!sessionService.isHeartbeatRunning()) {
           await sessionService.initializeSession();
           console.log('Session tracking initialized successfully');
         } else {
-          console.log('Session heartbeat already running, skipping session initialization');
+          console.log(
+            'Session heartbeat already running, skipping session initialization'
+          );
         }
       } else {
         console.error('No authenticated user found for device registration');
@@ -141,7 +149,8 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [consentRequirements, setConsentRequirements] = useState<ConsentRequirements | null>(null);
+  const [consentRequirements, setConsentRequirements] =
+    useState<ConsentRequirements | null>(null);
   const [hasValidConsent, setHasValidConsent] = useState(false);
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [showConsentBanner, setShowConsentBanner] = useState(false);
@@ -169,11 +178,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const convertedUser = convertFirebaseUser(firebaseUser);
         setUser(convertedUser);
 
+        // Ensure user document exists/updates in Firestore
+        try {
+          await apiService.callFunction('onUserCreate', {
+            email: firebaseUser.email,
+            displayName: convertedUser.name,
+            provider:
+              convertedUser.provider === 'google' ? 'google.com' : 'password',
+            photoURL: firebaseUser.photoURL,
+          });
+        } catch (err) {
+          console.warn('onUserCreate verification failed (non-blocking):', err);
+        }
+
         // Check consent requirements
         try {
           const requirements = await consentService.detectConsentRequirements();
           const hasConsent = consentService.hasValidConsent(requirements);
-          
+
           setConsentRequirements(requirements);
           setHasValidConsent(hasConsent);
 
@@ -186,21 +208,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             }
           } else {
             // Initialize device and session tracking
-            const isNewLogin = firebaseUser.metadata.creationTime === firebaseUser.metadata.lastSignInTime;
+            const isNewLogin =
+              firebaseUser.metadata.creationTime ===
+              firebaseUser.metadata.lastSignInTime;
             if (!isNewLogin) {
-              console.log('Existing user session detected, initializing enhanced tracking');
-              await initializeDeviceAndSessionWithConsent(requirements, isInitializing, setIsInitializing);
+              console.log(
+                'Existing user session detected, initializing enhanced tracking'
+              );
+              await initializeDeviceAndSessionWithConsent(
+                requirements,
+                isInitializing,
+                setIsInitializing
+              );
             }
           }
         } catch (error) {
           console.error('Failed to check consent requirements:', error);
           // Fallback to basic initialization without consent
-          await initializeDeviceAndSessionWithConsent({
-            required: false,
-            type: 'none',
-            country: 'Unknown',
-            countryCode: 'XX'
-          }, isInitializing, setIsInitializing);
+          await initializeDeviceAndSessionWithConsent(
+            {
+              required: false,
+              type: 'none',
+              country: 'Unknown',
+              countryCode: 'XX',
+            },
+            isInitializing,
+            setIsInitializing
+          );
         }
       } else {
         setUser(null);
@@ -292,7 +326,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setShowConsentBanner(false);
 
       // Initialize device and session tracking now that consent is given
-      await initializeDeviceAndSessionWithConsent(consentRequirements, isInitializing, setIsInitializing);
+      await initializeDeviceAndSessionWithConsent(
+        consentRequirements,
+        isInitializing,
+        setIsInitializing
+      );
       console.log('Consent stored and tracking initialized');
     } catch (error) {
       console.error('Failed to store consent:', error);
@@ -328,7 +366,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {children}
-      
+
       {/* Consent UI Components */}
       <ConsentModal
         isOpen={showConsentModal}
@@ -336,7 +374,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         onDecline={handleConsentDecline}
         country={consentRequirements?.country || 'Unknown'}
       />
-      
+
       <ConsentBanner
         isVisible={showConsentBanner}
         onAccept={storeConsent}
