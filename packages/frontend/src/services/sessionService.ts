@@ -348,7 +348,7 @@ class SessionManager {
   }
 
   /**
-   * End the current session properly by calling the backend
+   * End the current session properly. Local cleanup first, then server call if authenticated.
    */
   async endSession(): Promise<void> {
     if (!this.currentSessionId) {
@@ -356,24 +356,30 @@ class SessionManager {
       return;
     }
 
-    try {
-      console.log('Ending session:', this.currentSessionId);
-      
-      await apiService.callFunction('endSession', {
-        sessionId: this.currentSessionId
-      });
-      
-      console.log('Session ended successfully on server');
-    } catch (error) {
-      console.error('Failed to end session on server:', error);
-      // Continue with local cleanup even if server call fails
-    }
-    
-    // Always clean up locally
+    // Capture and clear immediately to avoid duplicate endings in concurrent flows
+    const sessionId = this.currentSessionId;
+    console.log('Ending session:', sessionId);
+
+    // Local cleanup first
     this.stopHeartbeat();
     this.currentSessionId = null;
     this.clearSessionFromStorage();
     console.log('Session ended and cleared locally');
+
+    // If user is no longer authenticated, skip server call to avoid 401
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser) {
+      console.log('User not authenticated, skipping server endSession call');
+      return;
+    }
+
+    try {
+      await apiService.callFunction('endSession', { sessionId });
+      console.log('Session ended successfully on server');
+    } catch (error) {
+      console.error('Failed to end session on server:', error);
+      // Already cleaned up locally; nothing more to do
+    }
   }
 
   /**

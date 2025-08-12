@@ -10,6 +10,18 @@ import { UserDeviceDocument } from '../lib/types';
 export const registerDevice = onCall(callableFunctionOptions, async (request) => {
   try {
     logger.info('=== REGISTER DEVICE START ===');
+    try {
+      // Log environment/project details to verify target project
+      // Note: FIREBASE_CONFIG may be large JSON; log only projectId if available
+      const firebaseConfigRaw = process.env.FIREBASE_CONFIG || '{}';
+      const firebaseConfig = JSON.parse(firebaseConfigRaw);
+      logger.info('Environment project info:', {
+        gcloudProject: process.env.GCLOUD_PROJECT || 'unknown',
+        firebaseProjectId: firebaseConfig.projectId || 'unknown',
+      });
+    } catch (e) {
+      logger.warn('Failed to parse FIREBASE_CONFIG for logging');
+    }
     logger.info('Request auth:', {
       uid: request.auth?.uid,
       hasAuth: !!request.auth
@@ -103,6 +115,9 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
       logger.info('Update data prepared:', JSON.stringify(updateData, null, 2));
 
       await deviceRef.update(updateData);
+      // Read back for verification logging
+      const verifyDoc = await deviceRef.get();
+      logger.info('Post-update device snapshot exists:', verifyDoc.exists);
       
       logger.info(`Successfully updated existing device: ${deviceId} for user: ${userId}`);
       const result = {
@@ -138,6 +153,9 @@ export const registerDevice = onCall(callableFunctionOptions, async (request) =>
       logger.info('Device data prepared:', JSON.stringify(deviceData, null, 2));
 
       await deviceRef.set(deviceData);
+      // Read back for verification logging
+      const verifyDoc = await deviceRef.get();
+      logger.info('Post-create device snapshot exists:', verifyDoc.exists);
       
       logger.info(`Successfully registered new device: ${deviceId} for user: ${userId}`);
       const result = {

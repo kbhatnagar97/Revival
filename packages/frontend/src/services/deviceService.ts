@@ -762,8 +762,13 @@ export const deviceService = {
    * Get all registered devices for the current user
    */
   getUserDevices: async (): Promise<UserDevice[]> => {
-    const result = await apiService.callFunction<{ devices: UserDevice[] }>('getUserDevices');
-    return result.devices;
+    const result = await apiService.callFunction<unknown>('getUserDevices');
+    // Backend currently returns an array; handle both array and { devices } shapes
+    if (Array.isArray(result)) {
+      return result as UserDevice[];
+    }
+    const obj = result as { devices?: UserDevice[] };
+    return obj.devices || [];
   },
 
   /**

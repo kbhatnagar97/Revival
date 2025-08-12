@@ -116,8 +116,22 @@ const initializeDeviceAndSessionWithConsent = async (
       const currentUser = authService.getCurrentUser();
       if (currentUser) {
         // Register the device with enhanced data according to DATABASE_SCHEMA.md
-        await deviceService.registerDevice(currentUser.uid);
-        console.log('Device registered successfully with enhanced data');
+        const regResult = await deviceService.registerDevice(currentUser.uid);
+        console.log(
+          'Device registered successfully with enhanced data',
+          regResult
+        );
+
+        // Debug: fetch devices from server to verify write reached Firestore
+        try {
+          const devices = await deviceService.getUserDevices();
+          console.log('[Device] Devices fetched after registration:', devices);
+        } catch (fetchErr) {
+          console.warn(
+            '[Device] Failed to fetch devices after registration:',
+            fetchErr
+          );
+        }
 
         // Initialize session tracking only if not already running
         if (!sessionService.isHeartbeatRunning()) {
@@ -196,31 +210,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const requirements = await consentService.detectConsentRequirements();
           const hasConsent = consentService.hasValidConsent(requirements);
 
+          // Debug: log consent requirement and region details
+          console.log('[Consent] Requirements detected:', {
+            required: requirements.required,
+            type: requirements.type,
+            country: requirements.country,
+            countryCode: requirements.countryCode,
+            hasConsent,
+          });
+
           setConsentRequirements(requirements);
           setHasValidConsent(hasConsent);
 
           // Show consent UI if required and not already given
           if (requirements.required && !hasConsent) {
             if (requirements.type === 'gdpr') {
+              console.log('[Consent] GDPR required — showing consent modal');
               setShowConsentModal(true);
             } else if (requirements.type === 'ccpa') {
+              console.log('[Consent] CCPA required — showing consent banner');
               setShowConsentBanner(true);
             }
           } else {
-            // Initialize device and session tracking
-            const isNewLogin =
-              firebaseUser.metadata.creationTime ===
-              firebaseUser.metadata.lastSignInTime;
-            if (!isNewLogin) {
-              console.log(
-                'Existing user session detected, initializing enhanced tracking'
-              );
-              await initializeDeviceAndSessionWithConsent(
-                requirements,
-                isInitializing,
-                setIsInitializing
-              );
-            }
+            console.log(
+              '[Consent] Consent not required or already granted — proceeding with device/session init'
+            );
+            // Initialize device and session tracking for both new and existing logins
+            await initializeDeviceAndSessionWithConsent(
+              requirements,
+              isInitializing,
+              setIsInitializing
+            );
           }
         } catch (error) {
           console.error('Failed to check consent requirements:', error);
@@ -297,6 +317,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signOut = async () => {
     try {
+      // Proactively stop heartbeat and clear session before auth state changes to avoid 401s
+      sessionService.clearSession();
       await authService.signOut();
       // User state will be updated by onAuthStateChanged
     } catch (error) {
