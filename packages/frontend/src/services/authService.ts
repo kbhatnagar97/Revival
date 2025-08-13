@@ -46,9 +46,14 @@ export const authService = {
   signUpWithEmail: async (email: string, password: string, name: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
-    // Update the user's display name immediately
+    // Update the user's display name immediately (capitalized)
+    const formattedName = name
+      .trim()
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
     await updateProfile(userCredential.user, {
-      displayName: name,
+      displayName: formattedName,
     });
     
     // Force refresh the user to get updated profile
@@ -58,7 +63,7 @@ export const authService = {
     try {
       await apiService.callFunction('onUserCreate', {
         email: userCredential.user.email,
-        displayName: name,
+        displayName: formattedName,
         provider: 'password',
         photoURL: userCredential.user.photoURL,
       });

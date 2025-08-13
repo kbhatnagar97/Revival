@@ -46,14 +46,21 @@ export const onUserCreate = onCall(callableFunctionOptions, async (request) => {
 
     // Get user email from auth token if not provided in data
     const userEmail = email || request.auth.token.email || '';
-    // Derive a reasonable fallback name from email if not provided
-    let userName = displayName || request.auth.token.name || '';
-    if (!userName && userEmail) {
-      const usernamePart = userEmail.split('@')[0] || 'User';
-      userName = usernamePart
-        .replace(/[._-]/g, ' ')
-        .replace(/\b\w/g, (letter: string) => letter.toUpperCase());
-    }
+
+    // Normalize and prioritize display name provided by client or token
+    const normalizeName = (raw?: string): string => {
+      const val = (raw || '').trim();
+      if (!val) return '';
+      return val
+        .split(/\s+/)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    };
+
+    // 1) Prefer explicitly provided displayName from request.data
+    // 2) Then token name if present
+    // 3) Otherwise do NOT derive from email; use generic fallback 'User'
+    let userName = normalizeName(displayName) || normalizeName(request.auth.token.name) || 'User';
     const userPhoto = photoURL || request.auth.token.picture;
     
     // Determine provider from auth token if not provided
@@ -70,11 +77,7 @@ export const onUserCreate = onCall(callableFunctionOptions, async (request) => {
       throw new HttpsError('invalid-argument', 'Email is required for user creation');
     }
 
-    // If still no name, use generic fallback rather than failing
-    if (!userName) {
-      logger.warn('No display name provided; using generic fallback name', { uid, userData });
-      userName = 'User';
-    }
+    // userName is guaranteed above (generic fallback)
 
     // Check if user document already exists
     const existingDoc = await db.collection('users').doc(uid).get();
