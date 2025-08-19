@@ -1,0 +1,96 @@
+name: Deploy Frontend to Vercel
+
+on:
+  push:
+    branches: [ main, backend ]
+  workflow_dispatch:
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  # Firebase Environment Variables
+  VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+  VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+  VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+  VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+  VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+  VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Frontend
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+          
+      - name: Install Dependencies
+        run: |
+          echo "Installing dependencies..."
+          npm ci
+          echo "Dependencies installed successfully"
+        
+      - name: Verify Frontend Package
+        run: |
+          echo "Verifying frontend package structure..."
+          ls -la packages/frontend/
+          cat packages/frontend/package.json | grep -E '"name"|"version"|"scripts"' || true
+          
+      - name: Build Frontend Package
+        run: |
+          echo "Building frontend package..."
+          npm run build --workspace=packages/frontend
+          echo "Build completed successfully"
+          ls -la packages/frontend/dist/ || echo "Dist directory not found"
+        
+      - name: Install Vercel CLI
+        run: |
+          echo "Installing Vercel CLI..."
+          npm install --global vercel@latest
+          vercel --version
+        
+      - name: Pull Vercel Environment Information
+        run: |
+          echo "Pulling Vercel environment information..."
+          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          echo "Environment information pulled successfully"
+        
+      - name: Build Project Artifacts
+        run: |
+          echo "Building project artifacts for Vercel..."
+          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          echo "Project artifacts built successfully"
+        
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          echo "Deploying to Vercel..."
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "Deployment successful!"
+          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+          echo "🚀 Deployed to: $DEPLOYMENT_URL"
+          
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 Frontend Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Success" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: Production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package**: packages/frontend" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: ${{ steps.deploy.outputs.deployment_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Changes Deployed:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          git log --oneline -5 --no-decorate >> $GITHUB_STEP_SUMMARY || echo "No recent commits" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          
